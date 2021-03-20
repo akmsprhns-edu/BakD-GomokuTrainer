@@ -15,6 +15,7 @@ namespace TreeSearchLib
         }
 
         protected abstract float EvaluateState(GameState gameState);
+        protected abstract List<float> EvaluateStates(IEnumerable<GameState> gameStates);
 
         protected float MinMaxSearch(int depth, GameState sourceState)
         {
@@ -69,7 +70,7 @@ namespace TreeSearchLib
             }
         }
 
-        public Move FindBestMove(GameState gameState, int depth)
+        public Move FindBestMoveMinMax(GameState gameState, int depth)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
             var searchResults = new List<SearchResult>();
@@ -102,6 +103,79 @@ namespace TreeSearchLib
             else
             {
                 return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
+            }
+        }
+
+        public Move FindBestMoveV1(GameState gameState)
+        {
+            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
+            var searchResults = new List<SearchResult>();
+            for (var row = 0; row < GameState.BoardSize; row++)
+            {
+                for (var col = 0; col < GameState.BoardSize; col++)
+                {
+                    if (gameState.OccupiedBy(row, col) != StoneColor.None)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        var newState = gameState.MakeMove(row, col);
+                        searchResults.Add(new SearchResult()
+                        {
+                            Evaluation = EvaluateState(newState),
+                            Move = new Move()
+                            {
+                                Row = row,
+                                Column = col
+                            }
+                        });
+                    }
+                }
+            }
+            if (Maximize)
+            {
+                return searchResults.Aggregate((acc, x) => x.Evaluation > acc.Evaluation ? x : acc).Move;
+            }
+            else
+            {
+                return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
+            }
+        }
+
+        public Move FindBestMoveV2(GameState gameState)
+        {
+            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
+            var possibleMoves = new List<(Move move, GameState gameState)>();
+            for (var row = 0; row < GameState.BoardSize; row++)
+            {
+                for (var col = 0; col < GameState.BoardSize; col++)
+                {
+                    if (gameState.OccupiedBy(row, col) != StoneColor.None)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        
+                        var newState = gameState.MakeMove(row, col);
+                        var move = new Move()
+                        {
+                            Row = row,
+                            Column = col
+                        };
+                        possibleMoves.Add((move, newState));
+                    }
+                }
+            }
+            var evaluations = EvaluateStates(possibleMoves.Select(x => x.gameState)).Zip(possibleMoves, (first, second) => (evaluation: first, move: second));
+            if (Maximize)
+            {
+                return evaluations.Aggregate((acc, x) => x.evaluation > acc.evaluation ? x : acc).move.move;
+            }
+            else
+            {
+                return evaluations.Aggregate((acc, x) => x.evaluation < acc.evaluation ? x : acc).move.move;
             }
         }
     }

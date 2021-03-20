@@ -139,7 +139,7 @@ namespace OnnxEstimator
             var pipeline = mlContext.Transforms.ApplyOnnxModel(modelPath);
             var transformer = pipeline.Fit(dummyData);
             var predictionEngine = mlContext.Model.CreatePredictionEngine<InputData, Prediction>(transformer);
-            var treeSearch = new OnnxEstimatorTreeSearch(predictionEngine);
+            var treeSearch = new OnnxEstimatorTreeSearch(predictionEngine, transformer);
             return new Player( playerName, treeSearch);
         }
 
