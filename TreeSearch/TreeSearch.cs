@@ -9,9 +9,10 @@ namespace TreeSearchLib
 {
     public abstract class TreeSearch
     {
+        private readonly Random Random;
         public TreeSearch()
         {
-
+            Random = new Random();
         }
 
         protected abstract float EvaluateState(GameState gameState);
@@ -105,11 +106,8 @@ namespace TreeSearchLib
                 return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
             }
         }
-
-        public Move FindBestMoveV1(GameState gameState)
+        public IEnumerable<SearchResult> GetEvaluatedMovesV1(GameState gameState)
         {
-            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
-            var searchResults = new List<SearchResult>();
             for (var row = 0; row < GameState.BoardSize; row++)
             {
                 for (var col = 0; col < GameState.BoardSize; col++)
@@ -121,25 +119,50 @@ namespace TreeSearchLib
                     else
                     {
                         var newState = gameState.MakeMove(row, col);
-                        searchResults.Add(new SearchResult()
+                        yield return new SearchResult()
                         {
                             Evaluation = EvaluateState(newState),
                             Move = new Move()
                             {
                                 Row = row,
                                 Column = col
-                            }
-                        });
+                            },
+                            GameState = newState
+                        };
                     }
                 }
             }
+        }
+
+        public Move FindBestMoveV1(GameState gameState)
+        {
+            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
+            var searchResults = GetEvaluatedMovesV1(gameState).ToList();
             if (Maximize)
             {
-                return searchResults.Aggregate((acc, x) => x.Evaluation > acc.Evaluation ? x : acc).Move;
+                var maxEvaluation = searchResults.Select(x => x.Evaluation).Max();
+                var maxMoves = searchResults.Where(x => x.Evaluation == maxEvaluation);
+                if (maxMoves.Count() == 1)
+                {
+                    return maxMoves.First().Move;
+                }
+                else
+                {
+                    return maxMoves.Skip(Random.Next(maxMoves.Count())).First().Move;
+                }
             }
             else
             {
-                return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
+                var minEvaluation = searchResults.Select(x => x.Evaluation).Min();
+                var minMoves = searchResults.Where(x => x.Evaluation == minEvaluation);
+                if (minMoves.Count() == 1)
+                {
+                    return minMoves.First().Move;
+                }
+                else
+                {
+                    return minMoves.Skip(Random.Next(minMoves.Count())).First().Move;
+                }
             }
         }
 

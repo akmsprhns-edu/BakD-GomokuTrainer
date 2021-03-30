@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GomokuLib;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,5 +9,6 @@ namespace TreeSearchLib
     {
         public float Evaluation { get; set; }
         public Move Move { get; set; }
+        public GameState GameState { get; set; }
     }
 }
