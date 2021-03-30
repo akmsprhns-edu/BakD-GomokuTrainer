@@ -1,14 +1,14 @@
 ﻿using GomokuLib;
 using Microsoft.ML;
 using Microsoft.ML.Transforms.Onnx;
-using OnnxEstimator.Models;
+using OnnxEstimatorLib.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TreeSearchLib;
 
-namespace OnnxEstimator
+namespace OnnxEstimatorLib
 {
     public class OnnxEstimatorTreeSearch : TreeSearch
     {

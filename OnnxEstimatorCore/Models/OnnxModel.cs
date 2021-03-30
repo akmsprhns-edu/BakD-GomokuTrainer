@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace OnnxEstimator
+namespace OnnxEstimatorLib.Models
 {
     public class OnnxModel
     {

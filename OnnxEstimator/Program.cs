@@ -2,7 +2,8 @@
 using Microsoft.ML;
 using Newtonsoft.Json;
 using NLog;
-using OnnxEstimator.Models;
+using OnnxEstimatorLib;
+using OnnxEstimatorLib.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

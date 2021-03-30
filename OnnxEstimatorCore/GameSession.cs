@@ -1,7 +1,7 @@
 ﻿using GomokuLib;
 using System;
 
-namespace OnnxEstimator
+namespace OnnxEstimatorLib
 {
     public class GameSession
     {

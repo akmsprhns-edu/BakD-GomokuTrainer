@@ -1,6 +1,6 @@
 ﻿using Microsoft.ML.Data;
 
-namespace OnnxEstimator.Models
+namespace OnnxEstimatorLib.Models
 {
     public class Prediction
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TreeSearchLib;
 
-namespace OnnxEstimator
+namespace OnnxEstimatorLib
 {
     public class Player
     {
