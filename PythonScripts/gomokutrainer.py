@@ -1,3 +1,4 @@
+from typing import Callable, List
 import numpy as np
 import json
 import subprocess
@@ -9,10 +10,11 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import onnx
 import keras2onnx
+from tensorflow.python.keras.engine.sequential import Sequential
 from es import OpenES
 
 class Evaluator:
-    def __init__(self, create_model_function, estimator_exe_path):
+    def __init__(self, create_model_function: Callable[[],Sequential], estimator_exe_path: str):
         self.estimator_exe_path = estimator_exe_path
 
         self.model = create_model_function()
@@ -32,7 +34,7 @@ class Evaluator:
 
         #flat_weights = np.concatenate(flat_layers)
         
-    def wrap_weights(self, flat_weights):
+    def wrap_weights(self, flat_weights: List[float]):
         #### wrap layer weights back
         split_indexes = [l for l in self.layer_sizes]
         for i in range(1, len(split_indexes)):
@@ -51,18 +53,20 @@ class Evaluator:
             layer_n += 1
         return model_weights
 
-    def set_model_weights(self, flat_weights):
+    def set_model_weights(self, flat_weights: List[float]):
         wrapped_weights = self.wrap_weights(flat_weights)
         self.model.set_weights(wrapped_weights)
 
-    def generate_file(self, model_number, models_output_dir):
+    def generate_file(self, model_number: int, models_output_dir: str):
         onnx.save_model(keras2onnx.convert_keras(self.model, self.model.name), path.abspath(path.join(models_output_dir , "model." + str(model_number) + ".onnx")))
+        if model_number % 100 == 0:
+            self.model.save(path.abspath(path.join(models_output_dir, 'model-' + str(model_number))))
 
-    def get_results_from_json(self, models_output_dir):
+    def get_results_from_json(self, models_output_dir: str) -> List[float]:
         with open(path.abspath(path.join(models_output_dir , "result.json"))) as json_file:
             return json.load(json_file)
 
-    def evaluate(self, list_of_flat_weights, models_output_dir):
+    def evaluate(self, list_of_flat_weights: List[List[float]], models_output_dir:str):
         Path(models_output_dir).mkdir(parents=True, exist_ok=True)
         model_n = 1
         for flat_weights in list_of_flat_weights:
@@ -84,27 +88,42 @@ def create_model():
         [
             keras.Input(shape=input_len, name="input"),
             layers.Reshape(input_shape),
-            layers.Conv2D(16, kernel_size=(5, 5), activation="relu"),
-            layers.Conv2D(8, kernel_size=(3, 3), activation="relu"),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D((2, 2)),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
             layers.Flatten(),
-            #layers.Dropout(0.5),
-            layers.Dense(2, activation="relu"),
+            layers.Dense(32, activation='relu'),
             layers.Dense(1, activation="sigmoid", name="output")
         ]
     )
-def save_solver(solver, dir):
+def save_solver(solver, dir: str):
     with open(path.join(dir,'solver.pkl'), 'wb') as output:
         pickle.dump(solver, output, pickle.HIGHEST_PROTOCOL)
 
-def load_solver(dir):
+def save_solver_params(solver, iteration: int, dir: str):
+    params_file_path = path.join(dir,'solver_params.csv')
+    if(not path.exists(params_file_path)):
+        with open(params_file_path, 'w') as output:
+            output.write(
+                ",".join(["iteration", "sigma", "learning_rate", "optimizer_stepsize"]) + '\n'
+            )
+    with open(params_file_path, 'a') as output:
+        output.write(
+            ",".join([str(iteration), str(solver.sigma), str(solver.learning_rate), str(solver.optimizer.stepsize)]) + '\n'
+        )
+
+
+def load_solver(dir: str):
     solver_file_path = path.join(dir,'solver.pkl')
     if(not path.exists(solver_file_path)):
         return None
-
     with open(solver_file_path, 'rb') as input:
        return pickle.load(input)
 
-def run_solver(solver, iteration_count, result_dir, estimator_exe_path):
+def get_iteration_dir(result_dir: str, iteration: int) -> str :
+    return path.join(result_dir, f"iteration{iteration:05d}")
+
+def run_solver(solver, iteration_count: int, result_dir: str, estimator_exe_path: str):
     evaluator = Evaluator(create_model, estimator_exe_path)
     history = []
     if(not hasattr(solver,'iteration')):
@@ -114,9 +133,10 @@ def run_solver(solver, iteration_count, result_dir, estimator_exe_path):
         list_of_flat_weights = solver.ask()
         solver.iteration = iteration
         print("Evaluating iteration " + str(iteration))
-        eval_result = evaluator.evaluate(list_of_flat_weights, path.join(result_dir, f"iteration{iteration:05d}"))
+        eval_result = evaluator.evaluate(list_of_flat_weights, get_iteration_dir(result_dir, iteration))
         solver.tell(eval_result)
         save_solver(solver, result_dir)
+        save_solver_params(solver, iteration, result_dir)
         result = solver.result() # first element is the best solution, second element is the best fitness
         history.append(result[1])
     return history
@@ -130,7 +150,7 @@ def main(argv):
     result_dir = path.abspath(argv[2])
     estimator_exe_path = path.abspath(argv[3])
     NPARAMS = sum([np.array(layer).size for layer in create_model().get_weights()])
-    NPOPULATION = 16
+    NPOPULATION = 32
 
     print("iteration count = " + str(iteration_count))
     print("result dir = " + result_dir)
