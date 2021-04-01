@@ -17,6 +17,7 @@ namespace OnnxEstimator
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly bool _LOG = false;
+        private static bool UseGpu = false;
         static int Main(string[] args)
         {
             try
@@ -27,6 +28,11 @@ namespace OnnxEstimator
                     return -1;
                 }
                 string modelsDir = args[0];
+                if (args.Contains("--gpu", StringComparer.OrdinalIgnoreCase))
+                {
+                    UseGpu = true;
+                }
+
                 modelsDir = Path.GetFullPath(modelsDir);
                 ConfigureLogger(modelsDir);
                 Logger.Info($"Searching models in directory {modelsDir}");
@@ -137,7 +143,8 @@ namespace OnnxEstimator
 
             var dummyData = mlContext.Data.LoadFromEnumerable(new InputData[0]);
 
-            var pipeline = mlContext.Transforms.ApplyOnnxModel(modelPath);
+            var gpu = UseGpu ? (int?)0 : null;
+            var pipeline = mlContext.Transforms.ApplyOnnxModel(modelPath, gpuDeviceId: gpu, fallbackToCpu: false);
             var transformer = pipeline.Fit(dummyData);
             var predictionEngine = mlContext.Model.CreatePredictionEngine<InputData, Prediction>(transformer);
             var treeSearch = new OnnxEstimatorTreeSearch(predictionEngine, transformer);
