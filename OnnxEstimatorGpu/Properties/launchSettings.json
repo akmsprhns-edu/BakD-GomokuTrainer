@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OnnxEstimatorGpu": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\OnnxEstimator\\Models --gpu"
+    }
+  }
+}

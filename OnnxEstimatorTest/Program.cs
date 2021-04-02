@@ -1,15 +1,11 @@
 ﻿using GomokuLib;
-using Microsoft.ML;
-using Newtonsoft.Json;
+using Microsoft.ML.OnnxRuntime;
 using NLog;
 using OnnxEstimatorLib;
 using OnnxEstimatorLib.Models;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace OnnxEstimatorTest
 {
@@ -17,6 +13,7 @@ namespace OnnxEstimatorTest
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly bool _LOG = false;
+        private static bool UseGpu = false;
         static int Main(string[] args)
         {
             try
@@ -59,8 +56,8 @@ namespace OnnxEstimatorTest
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole") { Layout = layout };
 
             // Rules for mapping loggers to targets            
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+            config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, logconsole);
+            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
 
             // Apply config           
             NLog.LogManager.Configuration = config;
@@ -71,14 +68,13 @@ namespace OnnxEstimatorTest
             var modelPath = onnxModel.Path;
             var playerName = Path.GetFileNameWithoutExtension(onnxModel.Path);
 
-            var mlContext = new MLContext();
+            InferenceSession inferenceSession;
+            if (UseGpu)
+                inferenceSession = new InferenceSession(modelPath, SessionOptions.MakeSessionOptionWithCudaProvider(0));
+            else
+                inferenceSession = new InferenceSession(modelPath);
 
-            var dummyData = mlContext.Data.LoadFromEnumerable(new InputData[0]);
-
-            var pipeline = mlContext.Transforms.ApplyOnnxModel(modelPath);
-            var transformer = pipeline.Fit(dummyData);
-            var predictionEngine = mlContext.Model.CreatePredictionEngine<InputData, Prediction>(transformer);
-            var treeSearch = new OnnxEstimatorTreeSearch(predictionEngine, transformer);
+            var treeSearch = new OnnxEstimatorTreeSearch(inferenceSession);
             return new Player(playerName, treeSearch);
         }
 

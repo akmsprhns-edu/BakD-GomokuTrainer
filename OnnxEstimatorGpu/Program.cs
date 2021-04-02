@@ -1,6 +1,6 @@
 ﻿using OnnxEstimatorLib;
 
-namespace OnnxEstimatorCpu
+namespace OnnxEstimatorGpu
 {
     class Program
     {

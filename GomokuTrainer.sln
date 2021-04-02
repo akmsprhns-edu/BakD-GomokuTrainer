@@ -3,15 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimator", "OnnxEstimator\OnnxEstimator.csproj", "{29D346BC-F324-40C6-9AA7-DCE2CFC6ECF0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimatorCpu", "OnnxEstimator\OnnxEstimatorCpu.csproj", "{29D346BC-F324-40C6-9AA7-DCE2CFC6ECF0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TreeSearchLib", "TreeSearch\TreeSearchLib.csproj", "{0491B5DD-1CE9-4335-81B9-88C6A05FABE6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GomokuLib", "GomokuLib\GomokuLib.csproj", "{38D2825E-8912-4B9F-BBAF-ADBE4B595501}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnnxEstimatorLib", "OnnxEstimatorCore\OnnxEstimatorLib.csproj", "{975B87E0-C958-411D-8868-8E717811AF95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimatorLib", "OnnxEstimatorCore\OnnxEstimatorLib.csproj", "{975B87E0-C958-411D-8868-8E717811AF95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnnxEstimatorTest", "OnnxEstimatorTest\OnnxEstimatorTest.csproj", "{DB839884-F7DB-421A-9EE9-A24DB859D57F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimatorTest", "OnnxEstimatorTest\OnnxEstimatorTest.csproj", "{DB839884-F7DB-421A-9EE9-A24DB859D57F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{43F47F22-B3FC-4E5E-BCEE-D44A0D6C7823}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnnxEstimatorGpu", "OnnxEstimatorGpu\OnnxEstimatorGpu.csproj", "{DC8B921B-9540-4891-BD86-EB902A635BC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,9 +43,18 @@ Global
 		{DB839884-F7DB-421A-9EE9-A24DB859D57F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB839884-F7DB-421A-9EE9-A24DB859D57F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB839884-F7DB-421A-9EE9-A24DB859D57F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC8B921B-9540-4891-BD86-EB902A635BC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC8B921B-9540-4891-BD86-EB902A635BC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC8B921B-9540-4891-BD86-EB902A635BC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC8B921B-9540-4891-BD86-EB902A635BC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0491B5DD-1CE9-4335-81B9-88C6A05FABE6} = {43F47F22-B3FC-4E5E-BCEE-D44A0D6C7823}
+		{38D2825E-8912-4B9F-BBAF-ADBE4B595501} = {43F47F22-B3FC-4E5E-BCEE-D44A0D6C7823}
+		{975B87E0-C958-411D-8868-8E717811AF95} = {43F47F22-B3FC-4E5E-BCEE-D44A0D6C7823}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F6A71E52-19E8-4DD0-847C-C99019B534BD}

@@ -9,7 +9,7 @@ rmdir "%PythonScriptsPath%" /s /q
 mkdir "%EstimatorExePath%"
 mkdir "%PythonScriptsPath%"
 
-cd %~dp0OnnxEstimator
+cd %~dp0OnnxEstimatorGpu
 dotnet publish --output "%EstimatorExePath%" --configuration release --self-contained true -r win-x64
 cd %~dp0PythonScripts
 robocopy . "%PythonScriptsPath%" *.py
