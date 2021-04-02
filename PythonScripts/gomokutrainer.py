@@ -150,7 +150,7 @@ def main(argv):
     result_dir = path.abspath(argv[2])
     estimator_exe_path = path.abspath(argv[3])
     NPARAMS = sum([np.array(layer).size for layer in create_model().get_weights()])
-    NPOPULATION = 32
+    NPOPULATION = 128
 
     print("iteration count = " + str(iteration_count))
     print("result dir = " + result_dir)

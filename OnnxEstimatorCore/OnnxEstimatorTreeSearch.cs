@@ -1,6 +1,7 @@
 ﻿using GomokuLib;
 using Microsoft.ML;
-using Microsoft.ML.Transforms.Onnx;
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
 using OnnxEstimatorLib.Models;
 using System;
 using System.Collections.Generic;
@@ -12,39 +13,49 @@ namespace OnnxEstimatorLib
 {
     public class OnnxEstimatorTreeSearch : TreeSearch
     {
-        private readonly PredictionEngine<InputData, Prediction> _predictionEngine;
-        private readonly OnnxTransformer _transformer;
+        private readonly InferenceSession _inferenceSession;
         private readonly MLContext _mlContext;
         //private readonly Random _random;
-        public OnnxEstimatorTreeSearch(PredictionEngine<InputData,Prediction> predictionEngine, OnnxTransformer transformer)
+        public OnnxEstimatorTreeSearch(InferenceSession inferenceSession)
             : base()
         {
-            _predictionEngine = predictionEngine;
-            _transformer = transformer;
+            _inferenceSession = inferenceSession;
             _mlContext = new MLContext();
             //_random = new Random(1);
 
         }
         protected override float EvaluateState(GameState gameState)
         {
-            var inputData = new InputData()
-            {
-                Input = gameState.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray()
-            };
-            //return (float)_random.NextDouble();
-            return _predictionEngine.Predict(inputData).Evaluation;
+            var inputData = gameState.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray();
+            var inputs = new List<NamedOnnxValue>()
+                {
+                    NamedOnnxValue.CreateFromTensor(Consts.NNInputName, new DenseTensor<float>(inputData, Consts.NNInputShape))
+                };
+            var outputs = new List<string>()
+                {
+                    Consts.NNOutputName
+                };
 
+            using var results = _inferenceSession.Run(inputs, outputs);
+            return  results.First().AsEnumerable<float>().First(); 
         }
 
         protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)
         {
-            var data = _mlContext.Data.LoadFromEnumerable(gameStates.Select(x => new InputData { 
-                Input = x.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray() 
-            }));
-            return _mlContext.Data.CreateEnumerable<Prediction>(
-                _transformer.Transform(data), 
-                reuseRowObject: false
-            ).Select(x => x.Evaluation).ToList();
+            var inputShape = (int[])Consts.NNInputShape.Clone();
+            inputShape[0] = gameStates.Count();
+            var inputData = gameStates.SelectMany( x => x.GetBoardStateArray()).Select(x => x ? 1f : 0f).ToArray();
+            var inputs = new List<NamedOnnxValue>()
+                {
+                    NamedOnnxValue.CreateFromTensor(Consts.NNInputName, new DenseTensor<float>(inputData, inputShape))
+                };
+            var outputs = new List<string>()
+                {
+                    Consts.NNOutputName
+                };
+
+            using var results = _inferenceSession.Run(inputs, outputs);
+            return results.First().AsEnumerable<float>().ToList();
         }
     }
 }

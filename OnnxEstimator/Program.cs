@@ -1,5 +1,6 @@
 ﻿using GomokuLib;
 using Microsoft.ML;
+using Microsoft.ML.OnnxRuntime;
 using Newtonsoft.Json;
 using NLog;
 using OnnxEstimatorLib;
@@ -17,7 +18,7 @@ namespace OnnxEstimator
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly bool _LOG = false;
-        private static bool UseGpu = false;
+        private static bool UseGpu = true;
         static int Main(string[] args)
         {
             try
@@ -83,18 +84,27 @@ namespace OnnxEstimator
                         }));
                     }
 
+                    var batchSize = 32;
+                    var batchNumber = 0;
+                    while (true)
+                    {
+                        var threadBatch = threads.Skip(batchNumber * batchSize).Take(batchSize).ToList();
+                        if (threadBatch.Count() == 0)
+                            break;
 
-                    foreach (var thread in threads)
-                        thread.Start();
+                        foreach (var thread in threadBatch)
+                            thread.Start();
 
-                    foreach (var thread in threads)
-                        thread.Join();
+                        foreach (var thread in threadBatch)
+                            thread.Join();
+
+                        ++batchNumber;
+                    }
 
                     if (models.Count % 2 == 1)
                     {
                         roundWinners.Add(models.Last());
                     }
-
                     models = roundWinners.ToList();
                     models.ForEach(x => x.Score += 1);
                     Logger.Info($"Round winners ({models.Count}): {string.Join(", ", models.Select(x => x.Number))}");
@@ -127,8 +137,8 @@ namespace OnnxEstimator
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole") { Layout = layout };
 
             // Rules for mapping loggers to targets            
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+            config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, logconsole);
+            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
 
             // Apply config           
             NLog.LogManager.Configuration = config;
@@ -139,15 +149,13 @@ namespace OnnxEstimator
             var modelPath = onnxModel.Path;
             var playerName = Path.GetFileNameWithoutExtension(onnxModel.Path);
 
-            var mlContext = new MLContext();
+            InferenceSession inferenceSession;
+            if(UseGpu)
+                inferenceSession = new InferenceSession(modelPath, SessionOptions.MakeSessionOptionWithCudaProvider(0));
+            else
+                inferenceSession = new InferenceSession(modelPath);
 
-            var dummyData = mlContext.Data.LoadFromEnumerable(new InputData[0]);
-
-            var gpu = UseGpu ? (int?)0 : null;
-            var pipeline = mlContext.Transforms.ApplyOnnxModel(modelPath, gpuDeviceId: gpu, fallbackToCpu: false);
-            var transformer = pipeline.Fit(dummyData);
-            var predictionEngine = mlContext.Model.CreatePredictionEngine<InputData, Prediction>(transformer);
-            var treeSearch = new OnnxEstimatorTreeSearch(predictionEngine, transformer);
+            var treeSearch = new OnnxEstimatorTreeSearch(inferenceSession);
             return new Player( playerName, treeSearch);
         }
 
