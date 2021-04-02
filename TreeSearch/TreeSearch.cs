@@ -17,7 +17,6 @@ namespace TreeSearchLib
 
         protected abstract float EvaluateState(GameState gameState);
         protected abstract List<float> EvaluateStates(IEnumerable<GameState> gameStates);
-
         protected float MinMaxSearch(int depth, GameState sourceState)
         {
             var Maximize = sourceState.PlayerTurn == PlayerColor.White ? true : false;
@@ -70,7 +69,6 @@ namespace TreeSearchLib
                 }
             }
         }
-
         public Move FindBestMoveMinMax(GameState gameState, int depth)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
@@ -106,7 +104,7 @@ namespace TreeSearchLib
                 return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
             }
         }
-        public IEnumerable<SearchResult> GetEvaluatedMovesV1(GameState gameState)
+        public IEnumerable<(Move Move, GameState NewState)> GetMoves(GameState gameState)
         {
             for (var row = 0; row < GameState.BoardSize; row++)
             {
@@ -119,25 +117,49 @@ namespace TreeSearchLib
                     else
                     {
                         var newState = gameState.MakeMove(row, col);
-                        yield return new SearchResult()
-                        {
-                            Evaluation = EvaluateState(newState),
-                            Move = new Move()
+                        yield return (
+                            Move: new Move()
                             {
                                 Row = row,
                                 Column = col
                             },
-                            GameState = newState
-                        };
+                            NewState: newState
+                        );
                     }
                 }
             }
         }
 
-        public Move FindBestMoveV1(GameState gameState)
+        public IEnumerable<SearchResult> GetEvaluatedMovesSequencial(GameState gameState)
+        {
+            return GetMoves(gameState).Select(x => new SearchResult()
+            {
+                Evaluation = EvaluateState(x.NewState),
+                Move = x.Move,
+                GameState = x.NewState
+            });
+        }
+        public IEnumerable<SearchResult> GetEvaluatedMovesBatch(GameState gameState)
+        {
+            var moves = GetMoves(gameState).ToList();
+            return EvaluateStates(moves.Select(x => x.NewState)).Zip(moves, (eval, move) => new SearchResult()
+            {
+                Evaluation = eval,
+                Move = move.Move,
+                GameState = move.NewState
+            });
+        }
+
+        public Move FindBestMove(GameState gameState, bool batch = true)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
-            var searchResults = GetEvaluatedMovesV1(gameState).ToList();
+
+            List<SearchResult> searchResults;
+            if (batch) 
+                searchResults = GetEvaluatedMovesBatch(gameState).ToList();
+            else
+                searchResults = GetEvaluatedMovesSequencial(gameState).ToList();
+
             if (Maximize)
             {
                 var maxEvaluation = searchResults.Select(x => x.Evaluation).Max();
@@ -163,42 +185,6 @@ namespace TreeSearchLib
                 {
                     return minMoves.Skip(Random.Next(minMoves.Count())).First().Move;
                 }
-            }
-        }
-
-        public Move FindBestMoveV2(GameState gameState)
-        {
-            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
-            var possibleMoves = new List<(Move move, GameState gameState)>();
-            for (var row = 0; row < GameState.BoardSize; row++)
-            {
-                for (var col = 0; col < GameState.BoardSize; col++)
-                {
-                    if (gameState.OccupiedBy(row, col) != StoneColor.None)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        
-                        var newState = gameState.MakeMove(row, col);
-                        var move = new Move()
-                        {
-                            Row = row,
-                            Column = col
-                        };
-                        possibleMoves.Add((move, newState));
-                    }
-                }
-            }
-            var evaluations = EvaluateStates(possibleMoves.Select(x => x.gameState)).Zip(possibleMoves, (first, second) => (evaluation: first, move: second));
-            if (Maximize)
-            {
-                return evaluations.Aggregate((acc, x) => x.evaluation > acc.evaluation ? x : acc).move.move;
-            }
-            else
-            {
-                return evaluations.Aggregate((acc, x) => x.evaluation < acc.evaluation ? x : acc).move.move;
             }
         }
     }

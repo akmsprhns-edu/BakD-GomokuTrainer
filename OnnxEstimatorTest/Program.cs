@@ -99,7 +99,7 @@ namespace OnnxEstimatorTest
                     _ => throw new Exception("Unsupported player color")
                 };
 
-                var searchResults = currentPlayer.TreeSearch.GetEvaluatedMovesV1(gameState);
+                var searchResults = currentPlayer.TreeSearch.GetEvaluatedMovesBatch(gameState);
                 foreach (var searchResult in searchResults)
                 {
                     Logger.Info($"#######\n Evaluation: {searchResult.Evaluation} \n" + searchResult.GameState.DrawBoard());
@@ -109,7 +109,7 @@ namespace OnnxEstimatorTest
                     }
                 }
 
-                var playerMove = currentPlayer.TreeSearch.FindBestMoveV1(gameState);
+                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState);
                 gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
                 //if (log)
                 //{
