@@ -48,43 +48,52 @@ namespace OnnxEstimatorLib
                 {
                     var roundWinners = new ConcurrentBag<OnnxModel>();
                     var threads = new List<Thread>();
+                    var threadFailed = false;
                     for (int i = 0; i < models.Count() - 1; i += 2)
                     {
                         var modelOneIndex = i;
                         var modelTwoIndex = i + 1;
                         threads.Add(new Thread(() =>
                         {
-                            var modelOne = models[modelOneIndex];
-                            var modelTwo = models[modelTwoIndex];
-                            Logger.Info($" model {modelOne.Number} playing against model {modelTwo.Number}");
-                            var winners = new List<OnnxModel>();
-                            winners.Add(RunGameSession(modelOne, modelTwo));
-                            winners.Add(RunGameSession(modelTwo, modelOne));
+                            try
+                            {
+                                var modelOne = models[modelOneIndex];
+                                var modelTwo = models[modelTwoIndex];
+                                Logger.Info($" model {modelOne.Number} playing against model {modelTwo.Number}");
+                                var winners = new List<OnnxModel>();
+                                winners.Add(RunGameSession(modelOne, modelTwo));
+                                winners.Add(RunGameSession(modelTwo, modelOne));
 
 
-                            var modelOneWinCount = winners.Count(x => x == modelOne);
-                            var modelTwoWinCount = winners.Count(x => x == modelTwo);
+                                var modelOneWinCount = winners.Count(x => x == modelOne);
+                                var modelTwoWinCount = winners.Count(x => x == modelTwo);
 
-                            if (modelOneWinCount > modelTwoWinCount)
-                            {
-                                roundWinners.Add(modelOne);
-                            }
-                            else if (modelTwoWinCount > modelOneWinCount)
-                            {
-                                roundWinners.Add(modelTwo);
-                            }
-                            else
-                            {
-                                if (random.Next(2) == 0)
+                                if (modelOneWinCount > modelTwoWinCount)
+                                {
                                     roundWinners.Add(modelOne);
-                                else
+                                }
+                                else if (modelTwoWinCount > modelOneWinCount)
+                                {
                                     roundWinners.Add(modelTwo);
+                                }
+                                else
+                                {
+                                    if (random.Next(2) == 0)
+                                        roundWinners.Add(modelOne);
+                                    else
+                                        roundWinners.Add(modelTwo);
+                                }
+                            } 
+                            catch(Exception e)
+                            {
+                                Logger.Error(e);
+                                threadFailed = true;
                             }
 
                         }));
                     }
 
-                    var batchSize = 32;
+                    var batchSize = 16;
                     var batchNumber = 0;
                     while (true)
                     {
@@ -97,6 +106,11 @@ namespace OnnxEstimatorLib
 
                         foreach (var thread in threadBatch)
                             thread.Join();
+
+                        if (threadFailed)
+                        {
+                            throw new Exception("Error in thread occured");
+                        }
 
                         ++batchNumber;
                     }
@@ -123,7 +137,7 @@ namespace OnnxEstimatorLib
             catch (Exception e)
             {
                 Logger.Fatal(e, "Exception occured, program terminated");
-                throw e;
+                return 1;
             }
         }
 
@@ -132,7 +146,7 @@ namespace OnnxEstimatorLib
             var config = new NLog.Config.LoggingConfiguration();
 
             // Targets where to log to: File and Console  yyyy-MM-dd_HH-mm-ss
-            var layout = "${longdate} | ${message}";
+            var layout = "${longdate} | ${level} | ${message}";
             var fileName = Path.GetFullPath(Path.Combine(fileDir, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log"));
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = fileName, Layout = layout };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole") { Layout = layout };

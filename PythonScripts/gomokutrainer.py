@@ -12,6 +12,8 @@ import onnx
 import keras2onnx
 from tensorflow.python.keras.engine.sequential import Sequential
 from es import OpenES
+from shutil import rmtree
+import time
 
 class Evaluator:
     def __init__(self, create_model_function: Callable[[],Sequential], estimator_exe_path: str):
@@ -59,26 +61,39 @@ class Evaluator:
 
     def generate_file(self, model_number: int, models_output_dir: str):
         onnx.save_model(keras2onnx.convert_keras(self.model, self.model.name), path.abspath(path.join(models_output_dir , "model." + str(model_number) + ".onnx")))
-        if model_number % 100 == 0:
-            self.model.save(path.abspath(path.join(models_output_dir, 'model-' + str(model_number))))
+
+    def save_keras_model(self, models_output_dir: str, model_number: int):
+        self.model.save(path.abspath(path.join(models_output_dir, 'keras-model-' + str(model_number))))
 
     def get_results_from_json(self, models_output_dir: str) -> List[float]:
         with open(path.abspath(path.join(models_output_dir , "result.json"))) as json_file:
             return json.load(json_file)
 
-    def evaluate(self, list_of_flat_weights: List[List[float]], models_output_dir:str):
+    def evaluate(self, list_of_flat_weights: List[List[float]], models_output_dir:str, keep_files: bool, save_keras_model: bool):
         Path(models_output_dir).mkdir(parents=True, exist_ok=True)
         model_n = 1
         for flat_weights in list_of_flat_weights:
             self.set_model_weights(flat_weights)
             self.generate_file(model_n, models_output_dir)
+            if save_keras_model:
+                self.save_keras_model(models_output_dir, model_n)
             model_n += 1
         print("starting evaluator exe")
-        command = [path.abspath(self.estimator_exe_path), path.abspath(models_output_dir)]
+        command = [path.abspath(self.estimator_exe_path), path.abspath(models_output_dir), "--gpu"]
         print(command)
-        print(subprocess.run(command))
-        print("evaluator exe finished")
-        return self.get_results_from_json(models_output_dir)
+        while(True):
+            run_result = subprocess.run(command)
+            if(run_result.returncode != 0):
+                print(f"!!!!! Evaluator.exe returned {run_result.returncode} !!!!")
+                time.sleep(5)
+            else:
+                print("evaluator exe finished successfuly")
+                break
+        
+        results = self.get_results_from_json(models_output_dir)
+        if(not keep_files):
+            rmtree(path.abspath(models_output_dir))
+        return results
 
 input_shape = (15,15,2)
 input_len = input_shape[0] * input_shape[1] * input_shape[2]
@@ -133,7 +148,12 @@ def run_solver(solver, iteration_count: int, result_dir: str, estimator_exe_path
         list_of_flat_weights = solver.ask()
         solver.iteration = iteration
         print("Evaluating iteration " + str(iteration))
-        eval_result = evaluator.evaluate(list_of_flat_weights, get_iteration_dir(result_dir, iteration))
+        eval_result = evaluator.evaluate(
+            list_of_flat_weights, 
+            get_iteration_dir(result_dir, iteration), 
+            keep_files= iteration % 5 == 0,
+            save_keras_model= iteration % 100 == 0
+        )
         solver.tell(eval_result)
         save_solver(solver, result_dir)
         save_solver_params(solver, iteration, result_dir)
@@ -160,7 +180,7 @@ def main(argv):
 
     oes = load_solver(result_dir)
     if (oes is None):
-        oes = OpenES(NPARAMS,                  # number of model parameters
+        oes = OpenES(NPARAMS,              # number of model parameters
                 sigma_init=0.5,            # initial standard deviation
                 sigma_decay=0.999,         # don't anneal standard deviation
                 learning_rate=0.1,         # learning rate for standard deviation
@@ -168,7 +188,7 @@ def main(argv):
                 popsize=NPOPULATION,       # population size
                 antithetic=False,          # whether to use antithetic sampling
                 weight_decay=0.00,         # weight decay coefficient
-                rank_fitness=True,        # use rank rather than fitness numbers
+                rank_fitness=True,         # use rank rather than fitness numbers
                 forget_best=True)
 
     run_solver(oes, iteration_count, result_dir, estimator_exe_path)
