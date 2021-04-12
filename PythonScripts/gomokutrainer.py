@@ -11,6 +11,7 @@ from tensorflow.keras import layers
 import onnx
 import keras2onnx
 from tensorflow.python.keras.engine.sequential import Sequential
+from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from es import OpenES
 from shutil import rmtree
 import time
@@ -76,6 +77,7 @@ class Evaluator:
             self.set_model_weights(flat_weights)
             self.generate_file(model_n, models_output_dir)
             if save_keras_model:
+                print("saving keras model")
                 self.save_keras_model(models_output_dir, model_n)
             model_n += 1
         print("starting evaluator exe")
@@ -103,12 +105,15 @@ def create_model():
         [
             keras.Input(shape=input_len, name="input"),
             layers.Reshape(input_shape),
-            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.Conv2D(32, kernel_size=(3, 3), kernel_initializer=keras.initializers.HeNormal()),
+            layers.LeakyReLU(alpha=0.2),
             layers.MaxPooling2D((2, 2)),
-            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.Conv2D(32, kernel_size=(3, 3), kernel_initializer=keras.initializers.HeNormal()),
+            layers.LeakyReLU(alpha=0.2),
             layers.Flatten(),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(1, activation="sigmoid", name="output")
+            layers.Dense(32, kernel_initializer=keras.initializers.HeNormal()),
+            layers.LeakyReLU(alpha=0.2),
+            layers.Dense(1, name="output")
         ]
     )
 def save_solver(solver, dir: str):
@@ -142,7 +147,7 @@ def run_solver(solver, iteration_count: int, result_dir: str, estimator_exe_path
     evaluator = Evaluator(create_model, estimator_exe_path)
     history = []
     if(not hasattr(solver,'iteration')):
-        solver.iteration = 0
+        solver.iteration = -1
 
     for iteration in range(solver.iteration + 1, solver.iteration + iteration_count + 1):
         list_of_flat_weights = solver.ask()
@@ -181,10 +186,10 @@ def main(argv):
     oes = load_solver(result_dir)
     if (oes is None):
         oes = OpenES(NPARAMS,              # number of model parameters
-                sigma_init=0.5,            # initial standard deviation
-                sigma_decay=0.999,         # don't anneal standard deviation
-                learning_rate=0.1,         # learning rate for standard deviation
-                learning_rate_decay = 1.0, # annealing the learning rate
+                sigma_init=0.8,            # initial standard deviation
+                sigma_decay=0.9988,         # don't anneal standard deviation
+                learning_rate=0.4,         # learning rate for standard deviation
+                learning_rate_decay = 0.999, # annealing the learning rate
                 popsize=NPOPULATION,       # population size
                 antithetic=False,          # whether to use antithetic sampling
                 weight_decay=0.00,         # weight decay coefficient

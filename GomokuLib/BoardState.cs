@@ -141,6 +141,9 @@ namespace GomokuLib
             StringBuilder sb = new StringBuilder();
             for (int row = 0; row < Consts.BOARD_SIZE; row++)
             {
+                if(Consts.BOARD_SIZE - row < 10)
+                        sb.Append(' ');
+                sb.Append(Consts.BOARD_SIZE - row);
                 for (int column = 0; column < Consts.BOARD_SIZE; column++)
                 {
                     var highlight = false;
@@ -163,6 +166,11 @@ namespace GomokuLib
                     }
                 }
                 sb.Append('\n');
+            }
+            sb.Append("  ");
+            for (int column = 0; column < Consts.BOARD_SIZE; column++)
+            {
+                sb.Append((char)(65 + column));
             }
 
             return sb.ToString();

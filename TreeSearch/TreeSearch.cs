@@ -35,7 +35,7 @@ namespace TreeSearchLib
 
                 return 0;
             }
-            else if(gameResult == GameResult.Tie || depth == 0) 
+            else if (gameResult == GameResult.Tie || depth == 0)
             {
                 return EvaluateState(sourceState);
             }
@@ -56,7 +56,7 @@ namespace TreeSearchLib
                         }
                     }
                 }
-                if(childEvals.Count == 0)
+                if (childEvals.Count == 0)
                 {
                     throw new Exception("No moves found");
                 }
@@ -84,7 +84,7 @@ namespace TreeSearchLib
                     else
                     {
                         var newState = gameState.MakeMove(row, col);
-                        searchResults.Add( new SearchResult(){
+                        searchResults.Add(new SearchResult() {
                             Evaluation = MinMaxSearch(depth - 1, newState),
                             Move = new Move()
                             {
@@ -104,6 +104,44 @@ namespace TreeSearchLib
                 return searchResults.Aggregate((acc, x) => x.Evaluation < acc.Evaluation ? x : acc).Move;
             }
         }
+
+        public GameTree BuildTree(GameState gameState, int depth = 1)
+        {
+            return new GameTree()
+            {
+                Root = new GameTreeNode()
+                {
+                    GameState = gameState,
+                    Children = BuildTreeInner(gameState, depth)
+                }
+            };
+        }
+
+        public List<GameTreeNode> BuildTreeInner(GameState gameState, int depth = 1)
+        {
+            if (depth < 1)
+            {
+                return null;
+            }
+            return GetMoves(gameState).Select(m => new GameTreeNode()
+            {
+                GameState = m.NewState,
+                Move = m.Move,
+                Children = BuildTreeInner(m.NewState, depth - 1)
+            }).ToList();
+        }
+
+        public GameTree EvaluateTree(GameTree gameTree)
+        {
+            var endNodes = gameTree.GetEndNodes().ToList();
+            var items = EvaluateStates(endNodes.Select(x => x.GameState)).Zip(endNodes, (eval, node) => (Eval: eval, Node: node));
+            foreach (var item in items)
+            {
+                item.Node.Evaluation = item.Eval;
+            }
+            return gameTree;
+        }
+
         public IEnumerable<(Move Move, GameState NewState)> GetMoves(GameState gameState)
         {
             for (var row = 0; row < GameState.BoardSize; row++)
@@ -130,6 +168,40 @@ namespace TreeSearchLib
             }
         }
 
+        public void EvaluateNode(GameTreeNode node, bool Maximize){
+            if (node.Evaluation is null)
+            {
+                if (node.Children is null)
+                {
+                    throw new Exception("End node not evaluated");
+                }
+                foreach (var child in node.Children)
+                {
+                    EvaluateNode(child, !Maximize);
+                }
+                if (Maximize)
+                {
+                    node.Evaluation = node.Children.Select(ch => ch.Evaluation).Max();
+                }
+                else
+                {
+                    node.Evaluation = node.Children.Select(ch => ch.Evaluation).Min();
+                }
+            }
+        }
+
+        public IEnumerable<SearchResult> GetEvaluatedMovesMinMax(GameState gameState, bool maximize, int depth = 1)
+        {
+            var tree = EvaluateTree(BuildTree(gameState, depth));
+            EvaluateNode(tree.Root, maximize);
+            return tree.Root.Children.Select(x => new SearchResult()
+            {
+                Evaluation = x.Evaluation.Value,
+                Move = x.Move,
+                GameState = x.GameState
+            });
+        }
+
         public IEnumerable<SearchResult> GetEvaluatedMovesSequencial(GameState gameState)
         {
             return GetMoves(gameState).Select(x => new SearchResult()
@@ -150,12 +222,14 @@ namespace TreeSearchLib
             });
         }
 
-        public Move FindBestMove(GameState gameState, bool batch = true)
+        public virtual Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
 
             List<SearchResult> searchResults;
-            if (batch) 
+            if (depth > 1)
+                searchResults = GetEvaluatedMovesMinMax(gameState, Maximize, depth).ToList();
+            else if (batch)
                 searchResults = GetEvaluatedMovesBatch(gameState).ToList();
             else
                 searchResults = GetEvaluatedMovesSequencial(gameState).ToList();

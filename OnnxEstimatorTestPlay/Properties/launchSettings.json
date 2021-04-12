@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OnnxEstimatorTestPlay": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\OnnxEstimator\\ModelTestPlay"
+    }
+  }
+}

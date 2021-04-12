@@ -4,6 +4,6 @@ set "EstimatorExePath=%~dp0publish\EstimatorExe"
 set /p IterationCount=Iteration Count: 
 
 @echo on
-start "Training..." /low /wait "python" "%PythonScriptsPath%\gomokutrainer.py" %IterationCount% "C:\Projects\GomokuTrainer\Output" "%EstimatorExePath%\OnnxEstimatorGpu.exe"
+start "Training..." /low /wait call "python" "%PythonScriptsPath%\gomokutrainer.py" %IterationCount% "C:\Projects\GomokuTrainer\Output" "%EstimatorExePath%\OnnxEstimatorGpu.exe"
 
 pause;
