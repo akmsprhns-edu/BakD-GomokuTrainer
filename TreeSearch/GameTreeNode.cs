@@ -10,10 +10,24 @@ namespace TreeSearchLib
     public class GameTreeNode
     {
         public GameState GameState { get; set; }
-        public List<GameTreeNode> Children { get; set; }
+        public Dictionary<Move,GameTreeNode> Children { get; set; }
         public Move Move { get; set; }
-        public float? Evaluation { get; set; }
 
+        ///// <summary>
+        ///// Node vists by MCTS
+        ///// </summary>
+        //public int N { get; set; }
+
+        /// <summary>
+        /// Evaluations by MCTS
+        /// </summary>
+        public List<double> Evals { get; }
+
+        public float? Evaluation { get; set; }
+        public GameTreeNode()
+        {
+            Evals = new List<double>();
+        }
         public IEnumerable<GameTreeNode> GetEndNodes()
         {
             if (Children is null)
@@ -22,7 +36,7 @@ namespace TreeSearchLib
             }
             else
             {
-                foreach (var child in Children)
+                foreach (var child in Children.Values)
                 {
                     if (child.Children is null)
                     {
@@ -30,6 +44,21 @@ namespace TreeSearchLib
                     }
 
                     foreach (var item in child.GetEndNodes())
+                    {
+                        yield return item;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<GameTreeNode> Flatten()
+        {
+            yield return this;
+            if (Children != null)
+            {
+                foreach (var child in Children.Values)
+                {
+                    foreach (var item in child.Flatten())
                     {
                         yield return item;
                     }

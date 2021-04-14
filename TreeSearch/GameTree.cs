@@ -14,5 +14,10 @@ namespace TreeSearchLib
         {
             return Root.GetEndNodes();
         }
+
+        public IEnumerable<GameTreeNode> Flatten()
+        {
+            return Root.Flatten();
+        }
     }
 }

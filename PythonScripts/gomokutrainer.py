@@ -36,7 +36,17 @@ class Evaluator:
             layer_n += 1
 
         #flat_weights = np.concatenate(flat_layers)
-        
+    def unwrap_weighs(self, model_weights):
+        ### unwrap layers weights
+        layer_count = len(model_weights)
+        flat_layers = [None] * layer_count
+        layer_n = 0
+        for layer in model_weights:
+            flat_layers[layer_n] = np.array(layer).reshape(-1)
+            layer_n += 1
+        flat_weights = np.concatenate(flat_layers)
+        return flat_weights
+
     def wrap_weights(self, flat_weights: List[float]):
         #### wrap layer weights back
         split_indexes = [l for l in self.layer_sizes]
@@ -113,7 +123,7 @@ def create_model():
             layers.Flatten(),
             layers.Dense(32, kernel_initializer=keras.initializers.HeNormal()),
             layers.LeakyReLU(alpha=0.2),
-            layers.Dense(1, name="output")
+            layers.Dense(1, activation='sigmoid', name="output")
         ]
     )
 def save_solver(solver, dir: str):
@@ -148,6 +158,11 @@ def run_solver(solver, iteration_count: int, result_dir: str, estimator_exe_path
     history = []
     if(not hasattr(solver,'iteration')):
         solver.iteration = -1
+        # first iteration, set initial mu
+        initial_weights = evaluator.unwrap_weighs(create_model().get_weights())
+        if len(initial_weights) != len(solver.mu):
+            raise Exception(f"len(initial_weights) != len(solver.mu) => {len(initial_weights)} != {len(solver.mu)}")
+        solver.mu = initial_weights
 
     for iteration in range(solver.iteration + 1, solver.iteration + iteration_count + 1):
         list_of_flat_weights = solver.ask()

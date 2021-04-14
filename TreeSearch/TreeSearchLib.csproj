@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Extensions\LinqExtensions.cs~RF2884a017.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GomokuLib\GomokuLib.csproj" />
   </ItemGroup>
 

@@ -8,7 +8,7 @@ using TreeSearchLib;
 
 namespace OnnxEstimatorLib
 {
-    public class OnnxEstimatorTreeSearch : TreeSearch
+    public class OnnxEstimatorTreeSearch : MonteCarloTreeSearch
     {
         private readonly InferenceSession _inferenceSession;
         public OnnxEstimatorTreeSearch(InferenceSession inferenceSession)
@@ -28,8 +28,9 @@ namespace OnnxEstimatorLib
                     Consts.NNOutputName
                 };
 
+            //return (float)Random.NextDouble();
             using var results = _inferenceSession.Run(inputs, outputs);
-            return  results.First().AsEnumerable<float>().First(); 
+            return results.First().AsEnumerable<float>().First();
         }
 
         protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)
@@ -45,7 +46,7 @@ namespace OnnxEstimatorLib
                 {
                     Consts.NNOutputName
                 };
-
+            //throw new System.NotImplementedException();
             using var results = _inferenceSession.Run(inputs, outputs);
             return results.First().AsEnumerable<float>().ToList();
         }

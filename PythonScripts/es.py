@@ -1,3 +1,6 @@
+"""
+(https://github.com/hardmaru/estool/blob/master/es.py)
+"""
 import numpy as np
 
 def compute_ranks(x):

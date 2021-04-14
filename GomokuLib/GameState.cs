@@ -17,6 +17,11 @@ namespace GomokuLib
             Board = board;
         }
 
+        public GameState MakeMove(Move move)
+        {
+            return MakeMove(move.Row, move.Column);
+        }
+
         public GameState MakeMove(int row, int col)
         {
             if(Board.OccupiedBy(row,col) != StoneColor.None)
@@ -60,6 +65,19 @@ namespace GomokuLib
                 }
             }
             return gameState;
+        }
+        public GameState MakeRandomMove(int? Seed = null)
+        {
+            Random rnd = Seed == null ? new Random() : new Random(Seed ?? 0);
+            while(true)
+            {
+                var row = rnd.Next(BoardSize);
+                var col = rnd.Next(BoardSize);
+                if (OccupiedBy(row, col) == StoneColor.None)
+                {
+                    return MakeMove(row, col);
+                }
+            }
         }
         public string DrawBoard()
         {
