@@ -41,12 +41,30 @@ namespace GomokuLib
         {
             return (column + row * Consts.BOARD_SIZE) * Consts.PLAYER_COUNT + color;
         }
+        public BoardState Copy()
+        {
+            return new BoardState(_data.Clone() as bool[], _moveCount);
+        }
+        public void SetInPlace(int row, int column, int color)
+        {
+            _data[Index(row, column, color)] = true;
+            _moveCount += 1;
+        }
         private BoardState Set(int row, int column, int color)
         {
-            var newData = _data.Clone() as bool[];
-            newData[Index(row, column, color)] = true;
-            return new BoardState(newData, _moveCount + 1);
+            var dataCopy = _data.Clone() as bool[];
+            var newBoard = new BoardState(dataCopy, _moveCount);
+            newBoard.SetInPlace(row, column, color);
+            return newBoard;
         }
+        public void MakeMoveInPlace(int x, int y)
+        {
+            if (PlayerTurn == PlayerColor.White)
+                SetInPlace(x, y, _whiteColor);
+            else
+                SetInPlace(x, y, _blackColor);
+        }
+
         public BoardState MakeMove(int x, int y)
         {
             if (PlayerTurn == PlayerColor.White)
@@ -70,6 +88,21 @@ namespace GomokuLib
                 return StoneColor.White;
             }
             return StoneColor.None;
+        }
+
+        public static readonly int[] adjacentDelta = new int[] { -1, 0, 1 };
+        public bool IsAnyAdjacent(int row, int col)
+        {
+            foreach (int rowDelta in adjacentDelta)
+            foreach(int colDelta in adjacentDelta)
+            {
+                var r = row + rowDelta;
+                var c = col + colDelta;
+                if (r > Consts.BOARD_SIZE - 1 || r < 0 || c > Consts.BOARD_SIZE - 1 || c < 0) continue;
+                if (OccupiedBy(r, c) != StoneColor.None) return true;
+            }
+
+            return false;
         }
         public bool[] GetBoardStateArray()
         {

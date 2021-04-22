@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # My
 /PythonScripts/.ipynb_checkpoints
 /PythonScripts/.vscode
+*.diagsession

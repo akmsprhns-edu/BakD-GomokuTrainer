@@ -28,7 +28,6 @@ namespace OnnxEstimatorLib
                     Consts.NNOutputName
                 };
 
-            //return (float)Random.NextDouble();
             using var results = _inferenceSession.Run(inputs, outputs);
             return results.First().AsEnumerable<float>().First();
         }

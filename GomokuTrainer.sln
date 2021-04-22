@@ -17,7 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimatorGpu", "OnnxEstimatorGpu\OnnxEstimatorGpu.csproj", "{DC8B921B-9540-4891-BD86-EB902A635BC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnnxEstimatorTestPlay", "OnnxEstimatorTestPlay\OnnxEstimatorTestPlay.csproj", "{851F3C19-B5EB-43B6-9789-F1296B964923}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnnxEstimatorTestPlay", "OnnxEstimatorTestPlay\OnnxEstimatorTestPlay.csproj", "{851F3C19-B5EB-43B6-9789-F1296B964923}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GomokuWebUI", "GomokuWebUI\GomokuWebUI.csproj", "{B465815D-29C0-432E-9AE9-5F7081DBF133}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{851F3C19-B5EB-43B6-9789-F1296B964923}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{851F3C19-B5EB-43B6-9789-F1296B964923}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{851F3C19-B5EB-43B6-9789-F1296B964923}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B465815D-29C0-432E-9AE9-5F7081DBF133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B465815D-29C0-432E-9AE9-5F7081DBF133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B465815D-29C0-432E-9AE9-5F7081DBF133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B465815D-29C0-432E-9AE9-5F7081DBF133}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

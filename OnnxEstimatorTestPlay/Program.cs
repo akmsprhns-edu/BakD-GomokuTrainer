@@ -6,6 +6,7 @@ using OnnxEstimatorLib.Models;
 using System;
 using System.IO;
 using System.Linq;
+using TreeSearchLib;
 
 namespace OnnxEstimatorTestPlay
 {
@@ -124,9 +125,13 @@ namespace OnnxEstimatorTestPlay
                 //        break;
                 //    }
                 //}
-
+                Console.WriteLine("Suggested moves:");
+                playerWhite.TreeSearch.PrintCurrentStateMoveInfo();
+                playerBlack.TreeSearch.PrintCurrentStateMoveInfo();
                 var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState, depth: 2);
                 gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
+                playerWhite.TreeSearch.MoveCurrentTreeNode(playerMove);
+                playerBlack.TreeSearch.MoveCurrentTreeNode(playerMove);
                 //if (log)
                 //{
                 Console.WriteLine($"{currentPlayer.Name,-15} made move {playerMove.Row}, {playerMove.Column} (row, column)");

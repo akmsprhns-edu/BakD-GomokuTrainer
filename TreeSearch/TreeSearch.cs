@@ -47,7 +47,7 @@ namespace TreeSearchLib
                 {
                     for (var col = 0; col < GameState.BoardSize; col++)
                     {
-                        if (sourceState.OccupiedBy(row, col) != StoneColor.None) {
+                        if (!sourceState.IsValidMove(row,col)) {
                             continue;
                         }
                         else
@@ -79,7 +79,7 @@ namespace TreeSearchLib
             {
                 for (var col = 0; col < GameState.BoardSize; col++)
                 {
-                    if (gameState.OccupiedBy(row, col) != StoneColor.None)
+                    if (!gameState.IsValidMove(row,col))
                     {
                         continue;
                     }
@@ -107,7 +107,7 @@ namespace TreeSearchLib
             }
         }
 
-        public GameTree BuildTree(GameState gameState,bool generateStates, int depth = 1)
+        public GameTree BuildTree(GameState gameState,bool generateStates, int depth = 1, bool onlyPriorityMoves = true)
         {
             var gameTree = new GameTree()
             {
@@ -116,17 +116,17 @@ namespace TreeSearchLib
                     GameState = gameState,
                 }
             };
-            gameTree.Root.Children = ExpandNode(gameTree.Root, generateStates, depth);
+            gameTree.Root.Children = ExpandNode(gameTree.Root, generateStates, depth: depth, onlyPriorityMoves: onlyPriorityMoves);
             return gameTree;
         }
 
-        public Dictionary<Move,GameTreeNode> ExpandNode(GameTreeNode gameTreeNode, bool generateStates, int depth = 1)
+        public Dictionary<Move,GameTreeNode> ExpandNode(GameTreeNode gameTreeNode, bool generateStates, int depth = 1, bool onlyPriorityMoves = true)
         {
             if (depth < 1)
             {
                 return null;
             }
-            return GetMoves(gameTreeNode.GameState).Select(m => 
+            return GetMoves(gameTreeNode.GameState, priority: onlyPriorityMoves).Select(m => 
             {
                 var node = new GameTreeNode()
                 {
@@ -150,13 +150,17 @@ namespace TreeSearchLib
             return gameTree;
         }
 
-        public IEnumerable<Move> GetMoves(GameState gameState)
+        public IEnumerable<Move> GetMoves(GameState gameState, bool priority = true)
         {
             for (var row = 0; row < GameState.BoardSize; row++)
             {
                 for (var col = 0; col < GameState.BoardSize; col++)
                 {
-                    if (gameState.OccupiedBy(row, col) != StoneColor.None)
+                    if (!priority && !gameState.IsValidMove(row, col))
+                    {
+                        continue;
+                    } 
+                    else if(priority && !gameState.IsValidPriorityMove(row, col))
                     {
                         continue;
                     }
@@ -206,9 +210,9 @@ namespace TreeSearchLib
             });
         }
 
-        public IEnumerable<SearchResult> GetEvaluatedMovesSequencial(GameState gameState)
+        public IEnumerable<SearchResult> GetEvaluatedMovesSequencial(GameState gameState, bool onlyPriorityMoves = true)
         {
-            var moves = GetMoves(gameState).ToList();
+            var moves = GetMoves(gameState, priority: onlyPriorityMoves).ToList();
             var states = moves.Select(m => gameState.MakeMove(m)).ToList();
             return states.Select(s => EvaluateState(s)).ZipThree(states, moves, (eval, state, move) => new SearchResult()
             {
@@ -217,9 +221,9 @@ namespace TreeSearchLib
                 GameState = state
             });
         }
-        public IEnumerable<SearchResult> GetEvaluatedMovesBatch(GameState gameState)
+        public IEnumerable<SearchResult> GetEvaluatedMovesBatch(GameState gameState, bool onlyPriorityMoves = true)
         {
-            var moves = GetMoves(gameState).ToList();
+            var moves = GetMoves(gameState, priority: onlyPriorityMoves).ToList();
             var states = moves.Select(m => gameState.MakeMove(m)).ToList();
             return EvaluateStates(states).ZipThree(states, moves, (eval, state, move) => new SearchResult()
             {
@@ -227,6 +231,16 @@ namespace TreeSearchLib
                 Move = move,
                 GameState = state
             });
+        }
+
+        public virtual void MoveCurrentTreeNode(Move move)
+        {
+
+        }
+
+        public virtual void PrintCurrentStateMoveInfo()
+        {
+
         }
 
         public virtual Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)

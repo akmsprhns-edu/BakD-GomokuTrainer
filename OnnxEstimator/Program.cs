@@ -1,4 +1,5 @@
 ﻿using OnnxEstimatorLib;
+using System.Linq;
 
 namespace OnnxEstimatorCpu
 {
@@ -6,7 +7,8 @@ namespace OnnxEstimatorCpu
     {
         static int Main(string[] args)
         {
-            return OnnxEstimator.Run(args);
+            var filtredArgs = args.Where(x => !x.Equals("--gpu", System.StringComparison.OrdinalIgnoreCase)).ToArray();
+            return OnnxEstimator.Run(filtredArgs);
         }
     }
 }
