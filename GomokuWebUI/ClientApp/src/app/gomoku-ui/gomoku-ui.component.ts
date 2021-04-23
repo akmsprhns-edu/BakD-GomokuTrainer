@@ -57,6 +57,7 @@ export class GomokuUiComponent implements OnInit {
         }, 
         error => { 
           console.error(error);
+          this.gameSession.board[row][col] = StoneColor.None;
           this.moveInProgress = false;
         }
       );

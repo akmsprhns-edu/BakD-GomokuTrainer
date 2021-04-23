@@ -9,7 +9,9 @@ namespace GomokuLib
     public class BoardState
     {
         private bool[] _data;
-        private const int _arraySize = Consts.BOARD_SIZE * Consts.BOARD_SIZE * 2;
+        private bool[] _adjacentData;
+        private const int _dataSize = Consts.BOARD_SIZE * Consts.BOARD_SIZE * 2;
+        private const int _adjacentDataSize = Consts.BOARD_SIZE * Consts.BOARD_SIZE;
         private static int[][] _patterns { get {
                 return new int[][] {
                 new int[] { 0, 2, 4, 6, 8},
@@ -19,44 +21,72 @@ namespace GomokuLib
                 };
             }
         }
+        
         private int[] _matchedIndexes = new int[0];
         private const int _whiteColor = 0;
         private const int _blackColor = 1;
         private int _moveCount;
+
         public PlayerColor PlayerTurn { get => _moveCount % 2 == 0 ? PlayerColor.White : PlayerColor.Black; }
+
         public BoardState()
         {
-            _data = new bool[_arraySize];
+            _data = new bool[_dataSize];
+            _adjacentData = new bool[_adjacentDataSize];
             _moveCount = 0;
         }
-        private BoardState(bool[] data, int moveNumber)
+
+        private BoardState(bool[] data, bool[] adjacentData, int moveNumber)
         {
-            if (data.Length != _arraySize)
-                throw new BoardStateException($"Provided data length ({data.Length}) doesn't match required array size ({_arraySize})");
+            if (data.Length != _dataSize)
+                throw new BoardStateException($"Provided data length ({data.Length}) doesn't match required array size ({_dataSize})");
 
             _data = data;
+            _adjacentData = adjacentData;
             _moveCount = moveNumber;
         }
+
         private static int Index(int row, int column, int color)
         {
             return (column + row * Consts.BOARD_SIZE) * Consts.PLAYER_COUNT + color;
         }
+        private static int Index(int row, int column)
+        {
+            return row * Consts.BOARD_SIZE + column;
+        }
+
         public BoardState Copy()
         {
-            return new BoardState(_data.Clone() as bool[], _moveCount);
+            return new BoardState(_data.Clone() as bool[], _adjacentData.Clone() as bool[], _moveCount);
         }
+
         public void SetInPlace(int row, int column, int color)
         {
             _data[Index(row, column, color)] = true;
+            SetAdjecentDataInPlace(row, column);
             _moveCount += 1;
         }
+
+        public static readonly int[] adjacentDelta = new int[] { -1, 0, 1 };
+        private void SetAdjecentDataInPlace(int row, int col)
+        {
+            foreach (int rowDelta in adjacentDelta)
+                foreach (int colDelta in adjacentDelta)
+                {
+                    var r = row + rowDelta;
+                    var c = col + colDelta;
+                    if (r > Consts.BOARD_SIZE - 1 || r < 0 || c > Consts.BOARD_SIZE - 1 || c < 0) continue;
+                    _adjacentData[Index(r,c)] = true;
+                }
+        }
+
         private BoardState Set(int row, int column, int color)
         {
-            var dataCopy = _data.Clone() as bool[];
-            var newBoard = new BoardState(dataCopy, _moveCount);
+            var newBoard = new BoardState(_data.Clone() as bool[], _adjacentData.Clone() as bool[], _moveCount);
             newBoard.SetInPlace(row, column, color);
             return newBoard;
         }
+
         public void MakeMoveInPlace(int x, int y)
         {
             if (PlayerTurn == PlayerColor.White)
@@ -77,6 +107,7 @@ namespace GomokuLib
         {
             return _data[Index(row, column, color)];
         }
+
         public StoneColor OccupiedBy(int row, int col)
         {
             if (Get(row, col, _blackColor))
@@ -90,24 +121,16 @@ namespace GomokuLib
             return StoneColor.None;
         }
 
-        public static readonly int[] adjacentDelta = new int[] { -1, 0, 1 };
         public bool IsAnyAdjacent(int row, int col)
         {
-            foreach (int rowDelta in adjacentDelta)
-            foreach(int colDelta in adjacentDelta)
-            {
-                var r = row + rowDelta;
-                var c = col + colDelta;
-                if (r > Consts.BOARD_SIZE - 1 || r < 0 || c > Consts.BOARD_SIZE - 1 || c < 0) continue;
-                if (OccupiedBy(r, c) != StoneColor.None) return true;
-            }
-
-            return false;
+            return _adjacentData[Index(row, col)];
         }
+
         public bool[] GetBoardStateArray()
         {
             return _data;
         }
+
         //public bool[] GetReversedBoardStateArray()
         //{
         //    var reversedData = new bool[_data.Length];
