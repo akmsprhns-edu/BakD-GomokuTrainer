@@ -1,0 +1,26 @@
+<div class="d-flex">
+  <table *ngIf="gameSession" class="table-board">
+    <tr *ngFor="let row of gameSession.board; index as rowIdx">
+      <td>{{gameSession.board[0].length - rowIdx}}</td>
+      <td *ngFor="let cell of row; index as colIdx" (click)="makeMove(rowIdx, colIdx)">
+        <div *ngIf="cell === playerType.Black" class="circle circle-black"></div>
+        <div *ngIf="cell === playerType.White" class="circle circle-white"></div>
+        <div *ngIf="cell === playerType.None" class="circle"></div>
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td *ngFor="let cell of gameSession.board[0]; index as colIdx">
+        {{letters[colIdx]}}
+      </td>
+    </tr>
+  </table>
+</div>
+<div class="d-flex">
+  <div class="ms-auto me-auto">
+    <img *ngIf="moveInProgress" class="hourglass-wait" src="/assets/icons/hourglass-split.svg" width="32" height="32">
+    <h3 *ngIf="gameSession.gameResult == gameResultType.WhiteWon">White won!</h3>
+    <h3 *ngIf="gameSession.gameResult == gameResultType.BlackWon">Black won!</h3>
+    <h3 *ngIf="gameSession.gameResult == gameResultType.Tie">Tie!</h3>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+
+$squere-size: 45px;
+
+@keyframes spin {
+  to {transform: rotate(360deg);}
+}
+
+.table-board{
+  margin-left: auto;
+  margin-right: auto;
+  user-select: none;
+  background-color: #ffdd9e;
+  background-size: contain;
+
+  tr, td {
+    border-color: black;
+    border-width: 1px;
+  }
+  td:first-of-type{
+    width: 30px;
+    text-align: center;
+  }
+  tr:last-of-type td {
+    height: 30px;
+    text-align: center;
+  }
+  td {
+    height: $squere-size;
+    width: $squere-size;
+    padding: 0;
+
+    .circle {
+      height: inherit;
+      width: inherit;
+      border-radius: 50%;
+      border-width: 3px;
+      border-style: solid;
+      padding: 3px;
+      border-color: rgba(0,0,0,0);
+
+      &.circle-black{
+        background-color: #222;
+        border-color: #555;
+
+      }
+      &.circle-white{
+        background-color: #EEE;
+        border-color: #BBB;
+      }
+    }
+  }
+}
+
+.hourglass-wait {
+  animation: spin 1s ease-in-out infinite;
+}

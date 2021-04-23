@@ -233,6 +233,10 @@ namespace TreeSearchLib
             });
         }
 
+        /// <summary>
+        /// Feedback to tree search, to tell witch move was made
+        /// </summary>
+        /// <param name="move"></param>
         public virtual void MoveCurrentTreeNode(Move move)
         {
 

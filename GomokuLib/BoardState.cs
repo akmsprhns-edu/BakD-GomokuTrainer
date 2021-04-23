@@ -208,5 +208,36 @@ namespace GomokuLib
 
             return sb.ToString();
         }
+
+        public StoneColor[,] Get2DArrary()
+        {
+            var array = new StoneColor[Consts.BOARD_SIZE, Consts.BOARD_SIZE];
+            for (int row = 0; row < Consts.BOARD_SIZE; row++)
+            {
+                for (int column = 0; column < Consts.BOARD_SIZE; column++)
+                {
+                    //var highlight = false;
+                    //if (_matchedIndexes.Contains(Index(row, column, _whiteColor)) || _matchedIndexes.Contains(Index(row, column, _blackColor)))
+                    //    highlight = true;
+
+                    switch (OccupiedBy(row, column))
+                    {
+                        case StoneColor.White:
+                            array[row, column] = StoneColor.White;
+                            break;
+                        case StoneColor.Black:
+                            array[row, column] = StoneColor.Black;
+                            break;
+                        case StoneColor.None:
+                            array[row, column] = StoneColor.None;
+                            break;
+                        default:
+                            throw new BoardStateException("Unsupported board state");
+                    }
+                }
+            }
+
+            return array;
+        }
     }
 }

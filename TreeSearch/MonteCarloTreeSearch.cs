@@ -1,17 +1,25 @@
 ﻿using GomokuLib;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TreeSearchLib
 {
-    public abstract class MonteCarloTreeSearch : TreeSearch
+    public class MonteCarloTreeSearch : TreeSearch
     {
         public static readonly int PLAYOUT_DEPTH = 20;
         public static readonly int ITERATIONS = 4000;
+
+        protected override float EvaluateState(GameState gameState)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)
+        {
+            throw new NotImplementedException();
+        }
+
         public static double UCB(double avgEval, int parentN, int childN)
         {
             if (childN == 0)

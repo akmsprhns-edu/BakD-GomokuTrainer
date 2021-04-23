@@ -121,5 +121,10 @@ namespace GomokuLib
         {
             return Board.DrawBoard();
         }
+
+        public StoneColor[,] Get2DArrary()
+        {
+            return Board.Get2DArrary();
+        }
     }
 }

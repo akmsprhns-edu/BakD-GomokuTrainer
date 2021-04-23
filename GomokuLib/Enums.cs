@@ -6,19 +6,19 @@ namespace GomokuLib
 {
     public enum PlayerColor
     {
-        White,
-        Black
+        White = 2,
+        Black = 1
     }
     public enum StoneColor
     {  
-        None,
-        Black,
-        White
+        None = 0,
+        Black = 1,
+        White = 2
     }
     public enum GameResult
     {
-        Tie,
-        WhiteWon,
-        BlackWon
+        Tie = 0,
+        WhiteWon = 2,
+        BlackWon = 1
     }
 }
