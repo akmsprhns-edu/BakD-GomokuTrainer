@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SelfPlayTestSimulation": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\OnnxEstimator\\ModelsTest"
+    }
+  }
+}

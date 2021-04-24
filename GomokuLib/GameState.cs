@@ -1,5 +1,6 @@
 ﻿using GomokuLib.Exceptions;
 using System;
+using System.Collections.Generic;
 
 namespace GomokuLib
 {
@@ -59,8 +60,14 @@ namespace GomokuLib
 
         public bool IsValidPriorityMove(int row, int col)
         {
-            return IsValidMove(row, col) && (IsInCentre(row, col) || Board.IsAnyAdjacent(row, col));
+            return (IsInCentre(row, col) || Board.IsAnyAdjacent(row, col)) && IsValidMove(row, col);
         }
+
+        public bool IsPriorityMove(int row, int col)
+        {
+            return IsInCentre(row, col) || Board.IsAnyAdjacent(row, col);
+        }
+
         private const int halfSize = (Consts.BOARD_SIZE + 1) / 2;
         public bool IsInCentre(int row, int col)
         {
@@ -75,6 +82,11 @@ namespace GomokuLib
         public bool[] GetBoardStateArray()
         {
             return Board.GetBoardStateArray();
+        }
+
+        public IEnumerable<(int row, int colmun)> GetUnoccupiedPositions()
+        {
+            return Board.GetUnoccupiedPositions();
         }
 
         public GameResult? IsGameOver()

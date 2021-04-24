@@ -7,8 +7,8 @@ namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
-        public static readonly int PLAYOUT_DEPTH = 20;
-        public static readonly int ITERATIONS = 4000;
+        public static readonly int PLAYOUT_DEPTH = 40;
+        public static readonly int ITERATIONS = 400;
 
         protected override float EvaluateState(GameState gameState)
         {
@@ -235,13 +235,13 @@ namespace TreeSearchLib
         {
             if (currentTreeNode != null)
             {
-                if (currentTreeNode.Children.TryGetValue(move, out var newNode))
+                if (currentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
                 {
                     currentTreeNode = newNode;
                 }
                 else
                 {
-                    Console.WriteLine("Unable to coninue current tree");
+                    //Console.WriteLine("Unable to coninue current tree");
                     currentTreeNode = null;
                 }
             }
@@ -277,14 +277,14 @@ namespace TreeSearchLib
             //    x.Evals.Add(EvaluateState(x.GameState));
             //});
 
-            Console.WriteLine("MCTS evaluated moves:");
-            PrintMoveInfo(currentTreeNode.Children);
+            //Console.WriteLine("MCTS evaluated moves:");
+            //PrintMoveInfo(currentTreeNode.Children);
                 
             var maxN = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
-            Console.WriteLine($"maxN={maxN}");
+            //Console.WriteLine($"maxN={maxN}");
             var bestNode = currentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
-            Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Value.Move)} or row {bestNode.Value.Move.Row}, col {bestNode.Value.Move.Column}");
-            Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+            //Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Value.Move)} or row {bestNode.Value.Move.Row}, col {bestNode.Value.Move.Column}");
+            //Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
             //Console.WriteLine($"Best node average evaluation {bestNode.Evals.DefaultIfEmpty().Average()}");
             return bestNode.Value.Move;
         }

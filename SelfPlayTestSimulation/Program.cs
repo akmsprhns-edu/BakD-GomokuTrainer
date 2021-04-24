@@ -6,15 +6,14 @@ using OnnxEstimatorLib.Models;
 using System;
 using System.IO;
 using System.Linq;
-using TreeSearchLib;
-
-namespace OnnxEstimatorTestPlay
+namespace SelfPlayTestSimulation
 {
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly bool _LOG = false;
         private static bool UseGpu = false;
+        private static int RunCount = 30;
         static int Main(string[] args)
         {
             try
@@ -33,10 +32,12 @@ namespace OnnxEstimatorTestPlay
 
                 var AllModels = Directory.GetFiles(modelsDir, "*.*.onnx").Select(x => new OnnxModel() { Path = x }).ToList();
 
-                var model = AllModels.First();
+                var models = AllModels.Take(2).ToList();
 
-                RunGameSession(model);
-
+                for (int i = 0; i < RunCount; i++)
+                {
+                    RunGameSession(models[0], models[1]);
+                }
                 return 0;
             }
             catch (Exception e)
@@ -79,29 +80,13 @@ namespace OnnxEstimatorTestPlay
             return new Player(playerName, treeSearch);
         }
 
-        public static Player CreateRealPlayer()
+        public static void RunGameSession(OnnxModel modelOne, OnnxModel modelTwo)
         {
-            var treeSearch = new RealPlayerTreeSearch();
-            return new Player("RealPlayer", treeSearch);
-        }
-
-        public static void RunGameSession(OnnxModel modelOne)
-        {
-            var rand = new Random();
-            Player playerWhite;
-            Player playerBlack;
-            if (rand.NextDouble() > 0.5)
-            {
-                playerWhite = CreatePlayer(modelOne);
-                playerBlack = CreateRealPlayer();
-            } else
-            {
-                playerWhite = CreateRealPlayer();
-                playerBlack = CreatePlayer(modelOne);
-            }
+            var playerWhite = CreatePlayer(modelOne);
+            var playerBlack = CreatePlayer(modelTwo);
             var gameState = GameState.NewGame();
 
-            Logger.Info($"Starting game session ({playerWhite.Name} vs {playerBlack.Name})");
+            Logger.Info($"Starting game session ({modelOne.Number} vs {modelTwo.Number})");
 
             Console.WriteLine($"Player {playerWhite.Name} play as white");
             Console.WriteLine($"Player {playerBlack.Name} play as black");
@@ -116,27 +101,12 @@ namespace OnnxEstimatorTestPlay
                     _ => throw new Exception("Unsupported player color")
                 };
 
-                //var searchResults = currentPlayer.TreeSearch.GetEvaluatedMovesBatch(gameState);
-                //foreach (var searchResult in searchResults)
-                //{
-                //    Logger.Info($"#######\n Evaluation: {searchResult.Evaluation} \n" + searchResult.GameState.DrawBoard());
-                //    if (Console.ReadKey().Key == ConsoleKey.Enter)
-                //    {
-                //        break;
-                //    }
-                //}
-                Console.WriteLine("Suggested moves:");
-                playerWhite.TreeSearch.PrintCurrentStateMoveInfo();
-                playerBlack.TreeSearch.PrintCurrentStateMoveInfo();
-                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState, depth: 2);
+               
+                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState);
                 gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
                 playerWhite.TreeSearch.MoveCurrentTreeNode(playerMove);
                 playerBlack.TreeSearch.MoveCurrentTreeNode(playerMove);
-                //if (log)
-                //{
-                Console.WriteLine($"{currentPlayer.Name,-15} made move {playerMove.Row}, {playerMove.Column} (row, column)");
-                Console.WriteLine(gameState.DrawBoard());
-                //}
+
                 var gameResult = gameState.IsGameOver();
                 if (gameResult.HasValue)
                 {
@@ -145,7 +115,7 @@ namespace OnnxEstimatorTestPlay
             }
 
             Logger.Info("Game finished");
-
+            Logger.Info("Final game state:\n" + gameState.DrawBoard());
         }
     }
 }

@@ -12,6 +12,7 @@ namespace GomokuLib
         private bool[] _adjacentData;
         private const int _dataSize = Consts.BOARD_SIZE * Consts.BOARD_SIZE * 2;
         private const int _adjacentDataSize = Consts.BOARD_SIZE * Consts.BOARD_SIZE;
+        private (int row, int column, int color) lastMove = (-1, -1, -1);
         private static int[][] _patterns { get {
                 return new int[][] {
                 new int[] { 0, 2, 4, 6, 8},
@@ -55,15 +56,21 @@ namespace GomokuLib
             return row * Consts.BOARD_SIZE + column;
         }
 
+        private static (int row, int column) Position(int index)
+        {
+            return (index / Consts.BOARD_SIZE, index % Consts.BOARD_SIZE);
+        }
+
         public BoardState Copy()
         {
             return new BoardState(_data.Clone() as bool[], _adjacentData.Clone() as bool[], _moveCount);
         }
 
-        public void SetInPlace(int row, int column, int color)
+        private void SetInPlace(int row, int column, int color)
         {
             _data[Index(row, column, color)] = true;
             SetAdjecentDataInPlace(row, column);
+            lastMove = (row: row, column: column, color: color);
             _moveCount += 1;
         }
 
@@ -121,6 +128,14 @@ namespace GomokuLib
             return StoneColor.None;
         }
 
+        public IEnumerable<(int row, int colmun)> GetUnoccupiedPositions()
+        {
+            for (int i = 0; i < Consts.BOARD_SIZE * Consts.BOARD_SIZE; i++)
+            {
+                if (!_data[i * 2] && !_data[i * 2 + 1]) yield return Position(i);
+            }
+        }
+
         public bool IsAnyAdjacent(int row, int col)
         {
             return _adjacentData[Index(row, col)];
@@ -151,7 +166,7 @@ namespace GomokuLib
 
             foreach(var pattern in _patterns)
             {
-                var searchResult = SearchPattern(pattern);
+                var searchResult = SearchLocalPattern(pattern);
                 switch (searchResult)
                 {
                     case PlayerColor.Black:
@@ -185,7 +200,37 @@ namespace GomokuLib
                 if (matchFound)
                 {
                     _matchedIndexes = pattern.Select(x => x + dataIndex).ToArray();
-                    var playerWon = dataIndex % 2 == 0 ? PlayerColor.White : PlayerColor.Black;
+                    var playerWon = dataIndex % 2 == _whiteColor ? PlayerColor.White : PlayerColor.Black;
+                    return playerWon;
+                }
+            }
+            return null;
+        }
+
+        public PlayerColor? SearchLocalPattern(int[] pattern)
+        {
+            var lastMoveIndex = Index(lastMove.row, lastMove.column, lastMove.color);
+            var patternMaxCols = pattern.Max(x => x % Consts.BOARD_SIZE) + 1;
+            var patternLen = pattern.Max();
+            foreach (var patternOffset in pattern)
+            {
+                var dataIndex = lastMoveIndex - patternOffset;
+                if (dataIndex < 0 || dataIndex >= _data.Length - patternLen || (dataIndex % (Consts.BOARD_SIZE * 2)) > (Consts.BOARD_SIZE * 2) - patternMaxCols)
+                    continue;
+
+                var matchFound = true;
+                foreach (var patternIndex in pattern)
+                {
+                    if (!_data[dataIndex + patternIndex])
+                    {
+                        matchFound = false;
+                        break;
+                    }
+                }
+                if (matchFound)
+                {
+                    _matchedIndexes = pattern.Select(x => x + dataIndex).ToArray();
+                    var playerWon = lastMove.color == _whiteColor ? PlayerColor.White : PlayerColor.Black;
                     return playerWon;
                 }
             }

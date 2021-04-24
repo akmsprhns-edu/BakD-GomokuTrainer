@@ -152,26 +152,20 @@ namespace TreeSearchLib
 
         public IEnumerable<Move> GetMoves(GameState gameState, bool priority = true)
         {
-            for (var row = 0; row < GameState.BoardSize; row++)
+            foreach ((var row, var col) in gameState.GetUnoccupiedPositions())
             {
-                for (var col = 0; col < GameState.BoardSize; col++)
+
+                if (priority && !gameState.IsPriorityMove(row, col))
                 {
-                    if (!priority && !gameState.IsValidMove(row, col))
+                    continue;
+                }
+                else
+                {
+                    yield return new Move()
                     {
-                        continue;
-                    } 
-                    else if(priority && !gameState.IsValidPriorityMove(row, col))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        yield return new Move()
-                        {
-                            Row = row,
-                            Column = col
-                        };
-                    }
+                        Row = row,
+                        Column = col
+                    };
                 }
             }
         }
