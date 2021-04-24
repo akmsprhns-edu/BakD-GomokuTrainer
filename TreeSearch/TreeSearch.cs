@@ -15,7 +15,7 @@ namespace TreeSearchLib
         {
             Random = new Random();
         }
-
+        
         protected abstract float EvaluateState(GameState gameState);
         protected abstract List<float> EvaluateStates(IEnumerable<GameState> gameStates);
         protected float MinMaxSearch(int depth, GameState sourceState)
@@ -236,9 +236,9 @@ namespace TreeSearchLib
 
         }
 
-        public virtual void PrintCurrentStateMoveInfo()
+        public virtual string PrintCurrentStateMoveInfo()
         {
-
+            return "";
         }
 
         public virtual Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)

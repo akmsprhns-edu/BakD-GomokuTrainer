@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
         public static readonly int PLAYOUT_DEPTH = 40;
-        public static readonly int ITERATIONS = 400;
+        public static readonly int ITERATIONS = 10000;
 
         protected override float EvaluateState(GameState gameState)
         {
@@ -26,7 +27,7 @@ namespace TreeSearchLib
             {
                 return double.MaxValue;
             }
-            return avgEval + Math.Sqrt(2*Math.Log(parentN) / childN);
+            return avgEval + Math.Sqrt(Math.Log(parentN) / childN);
             //return avgEval;
         }
         //private static GameTreeNode MCTSSelect(GameTreeNode node)
@@ -237,7 +238,13 @@ namespace TreeSearchLib
             {
                 if (currentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
                 {
+                    Console.WriteLine("Current node changed." +
+                        $"Previous node eval. for {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? PlayerColor.Black : PlayerColor.White)}: {currentTreeNode.Evals.DefaultIfEmpty().Average()}." + 
+                        $"New node eval. for {(newNode.GameState.PlayerTurn == PlayerColor.White ? PlayerColor.Black : PlayerColor.White)}: {newNode.Evals.DefaultIfEmpty().Average()}");
                     currentTreeNode = newNode;
+                    
+                    Console.WriteLine(currentTreeNode.GameState.DrawBoard());
+                    Console.WriteLine($"MCTS evaluated moves for {currentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(currentTreeNode.Children));
                 }
                 else
                 {
@@ -277,26 +284,33 @@ namespace TreeSearchLib
             //    x.Evals.Add(EvaluateState(x.GameState));
             //});
 
-            //Console.WriteLine("MCTS evaluated moves:");
-            //PrintMoveInfo(currentTreeNode.Children);
+            
                 
             var maxN = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
-            //Console.WriteLine($"maxN={maxN}");
             var bestNode = currentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
-            //Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Value.Move)} or row {bestNode.Value.Move.Row}, col {bestNode.Value.Move.Column}");
-            //Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
-            //Console.WriteLine($"Best node average evaluation {bestNode.Evals.DefaultIfEmpty().Average()}");
+            
+            Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
+            Console.WriteLine($"maxN={maxN}");
+            Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Value.Move)} or row {bestNode.Value.Move.Row}, col {bestNode.Value.Move.Column}");
+            Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+            Console.WriteLine($"Best node average evaluation {bestNode.Value.Evals.DefaultIfEmpty().Average()}");
             return bestNode.Value.Move;
         }
-        public override void PrintCurrentStateMoveInfo()
+        public override string PrintCurrentStateMoveInfo()
         {
             if(currentTreeNode != null)
             {
-                PrintMoveInfo(currentTreeNode.Children);
+                return PrintMoveInfo(currentTreeNode.Children);
             }
+            return "";
         }
-        public static void PrintMoveInfo(Dictionary<Move, GameTreeNode> dict)
+        public static string PrintMoveInfo(Dictionary<Move, GameTreeNode> dict)
         {
+            if(dict == null || !dict.Any())
+            {
+                return "No childrens...";
+            }
+            var stringBuilder = new StringBuilder();
             var move = "";
             var count = "";
             var avgEval = "";
@@ -308,9 +322,9 @@ namespace TreeSearchLib
                 avgEval += $"{item.Value.Evals.DefaultIfEmpty().Average(),-6:.0000}|";
                 if(i > 15)
                 {
-                    Console.WriteLine(move);
-                    Console.WriteLine(count);
-                    Console.WriteLine(avgEval);
+                    stringBuilder.AppendLine(move);
+                    stringBuilder.AppendLine(count);
+                    stringBuilder.AppendLine(avgEval);
                     move = "";
                     count = "";
                     avgEval = "";
@@ -322,10 +336,11 @@ namespace TreeSearchLib
             }
             if (!string.IsNullOrWhiteSpace(move))
             {
-                Console.WriteLine(move);
-                Console.WriteLine(count);
-                Console.WriteLine(avgEval);
+                stringBuilder.AppendLine(move);
+                stringBuilder.AppendLine(count);
+                stringBuilder.AppendLine(avgEval);
             }
+            return stringBuilder.ToString();
         }
 
         public static string MoveToStr(Move move)

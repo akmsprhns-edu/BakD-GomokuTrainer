@@ -32,11 +32,11 @@ namespace SelfPlayTestSimulation
 
                 var AllModels = Directory.GetFiles(modelsDir, "*.*.onnx").Select(x => new OnnxModel() { Path = x }).ToList();
 
-                var models = AllModels.Take(2).ToList();
+                var model = AllModels.First();
 
                 for (int i = 0; i < RunCount; i++)
                 {
-                    RunGameSession(models[0], models[1]);
+                    RunGameSession(model);
                 }
                 return 0;
             }
@@ -80,33 +80,19 @@ namespace SelfPlayTestSimulation
             return new Player(playerName, treeSearch);
         }
 
-        public static void RunGameSession(OnnxModel modelOne, OnnxModel modelTwo)
+        public static void RunGameSession(OnnxModel model)
         {
-            var playerWhite = CreatePlayer(modelOne);
-            var playerBlack = CreatePlayer(modelTwo);
+            var player = CreatePlayer(model);
             var gameState = GameState.NewGame();
 
-            Logger.Info($"Starting game session ({modelOne.Number} vs {modelTwo.Number})");
 
-            Console.WriteLine($"Player {playerWhite.Name} play as white");
-            Console.WriteLine($"Player {playerBlack.Name} play as black");
-
-            Player currentPlayer;
             while (true)
             {
-                currentPlayer = gameState.PlayerTurn switch
-                {
-                    PlayerColor.White => playerWhite,
-                    PlayerColor.Black => playerBlack,
-                    _ => throw new Exception("Unsupported player color")
-                };
 
-               
-                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState);
-                gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
-                playerWhite.TreeSearch.MoveCurrentTreeNode(playerMove);
-                playerBlack.TreeSearch.MoveCurrentTreeNode(playerMove);
-
+                var move = player.TreeSearch.FindBestMove(gameState);
+                gameState = gameState.MakeMove(move.Row, move.Column);
+                player.TreeSearch.MoveCurrentTreeNode(move);
+                //Logger.Info(gameState.DrawBoard());
                 var gameResult = gameState.IsGameOver();
                 if (gameResult.HasValue)
                 {
