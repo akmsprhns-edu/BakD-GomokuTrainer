@@ -33,11 +33,7 @@ namespace OnnxEstimatorLib
             var userInputSplit = userInput.Split();
             int col = userInputSplit[0].ToUpper()[0] - 65;
             int row = 15 - int.Parse(userInputSplit[1]);
-            return new Move()
-            {
-                Row = row,
-                Column = col
-            };
+            return new Move(row , col, gameState.PlayerTurn);
         }
 
         //protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)

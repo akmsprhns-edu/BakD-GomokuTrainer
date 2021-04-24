@@ -8,8 +8,8 @@ namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
-        public static readonly int PLAYOUT_DEPTH = 40;
-        public static readonly int ITERATIONS = 10000;
+        public static readonly int PLAYOUT_DEPTH = 999;
+        public static readonly int ITERATIONS = 15000;
 
         protected override float EvaluateState(GameState gameState)
         {
@@ -107,7 +107,12 @@ namespace TreeSearchLib
             if (node.GameState is null)
                 throw new ArgumentNullException(nameof(node.GameState));
 
-            if (node.Evals.Count == 0) // new node found
+            var isGameOverResult = node.GameState.IsGameOver();
+            if (isGameOverResult != null)
+            {
+                playoutGameResult = isGameOverResult;
+            }
+            else if (node.Evals.Count == 0) // new node found
             {
                 //evaluation = EvaluateState(node.GameState);
                 //evaluation = MCTSPlayout(node.GameState, PLAYOUT_DEPTH); //New evaluation
@@ -120,46 +125,39 @@ namespace TreeSearchLib
             } 
             else
             {
-                var isGameOverResult = node.GameState.IsGameOver();
-                if (isGameOverResult != null)
+                if (node.Children is null)
                 {
-                    playoutGameResult = isGameOverResult;
+                    node.Children = ExpandNode(node, false);
+                }
+                if (!node.Children.Any())
+                {
+                    //no more moves, tie
+                    playoutGameResult = GameResult.Tie;
                 }
                 else
                 {
-                    if (node.Children is null)
+                    double bestUCB = double.MinValue;
+                    KeyValuePair<Move,GameTreeNode>? bestChild = null;
+                    foreach (var child in node.Children)
                     {
-                        node.Children = ExpandNode(node, false);
-                    }
-                    if (!node.Children.Any())
-                    {
-                        //no more moves, tie
-                        playoutGameResult = GameResult.Tie;
-                    }
-                    else
-                    {
-                        double bestUCB = double.MinValue;
-                        GameTreeNode bestChild = null;
-                        foreach (var child in node.Children)
+                        var ucb = UCB(child.Value.Evals.DefaultIfEmpty().Average(), node.Evals.Count(), child.Value.Evals.Count());
+                        if (ucb >= bestUCB)
                         {
-                            var ucb = UCB(child.Value.Evals.DefaultIfEmpty().Average(), node.Evals.Count(), child.Value.Evals.Count());
-                            if (ucb >= bestUCB)
-                            {
-                                bestUCB = ucb;
-                                bestChild = child.Value;
-                            }
-                            if (bestUCB == double.MaxValue)
-                                break; //Stop if maximal value found
+                            bestUCB = ucb;
+                            bestChild = child;
                         }
-                        //var bestChild = node.Children.ToList()[Random.Next(node.Children.Count())];
-                        if (bestChild.GameState is null)
-                        {
-                            bestChild.GameState = node.GameState.MakeMove(bestChild.Move);
-                        }
+                        if (bestUCB == double.MaxValue)
+                            break; //Stop if maximal value found
+                    }
+                    //var bestChild = node.Children.ToList()[Random.Next(node.Children.Count())];
+                    if (bestChild.Value.Value.GameState is null)
+                    {
+                        bestChild.Value.Value.GameState = node.GameState.MakeMove(bestChild.Value.Key);
+                    }
 
-                        playoutGameResult = MCTSRun(bestChild); // Evaluation backpropagation
-                    }
+                    playoutGameResult = MCTSRun(bestChild.Value.Value); // Evaluation backpropagation
                 }
+
             }
             //else
             //{ 
@@ -245,6 +243,8 @@ namespace TreeSearchLib
                     
                     Console.WriteLine(currentTreeNode.GameState.DrawBoard());
                     Console.WriteLine($"MCTS evaluated moves for {currentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(currentTreeNode.Children));
+
+                    AllNodes.RemoveWhere(x => x.Moves.Count < currentTreeNode.Moves.Count);
                 }
                 else
                 {
@@ -291,10 +291,10 @@ namespace TreeSearchLib
             
             Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
             Console.WriteLine($"maxN={maxN}");
-            Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Value.Move)} or row {bestNode.Value.Move.Row}, col {bestNode.Value.Move.Column}");
+            Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Key)} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
             Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
             Console.WriteLine($"Best node average evaluation {bestNode.Value.Evals.DefaultIfEmpty().Average()}");
-            return bestNode.Value.Move;
+            return bestNode.Key;
         }
         public override string PrintCurrentStateMoveInfo()
         {

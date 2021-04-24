@@ -14,8 +14,11 @@ namespace TreeSearchLib
         public TreeSearch()
         {
             Random = new Random();
+            AllNodes = new HashSet<GameTreeNode>();
         }
         
+        public HashSet<GameTreeNode> AllNodes { get; }
+
         protected abstract float EvaluateState(GameState gameState);
         protected abstract List<float> EvaluateStates(IEnumerable<GameState> gameStates);
         protected float MinMaxSearch(int depth, GameState sourceState)
@@ -88,11 +91,7 @@ namespace TreeSearchLib
                         var newState = gameState.MakeMove(row, col);
                         searchResults.Add(new SearchResult() {
                             Evaluation = MinMaxSearch(depth - 1, newState),
-                            Move = new Move()
-                            {
-                                Row = row,
-                                Column = col
-                            }
+                            Move = new Move(row, col, gameState.PlayerTurn)
                         });
                     }
                 }
@@ -130,13 +129,23 @@ namespace TreeSearchLib
             {
                 var node = new GameTreeNode()
                 {
-                    GameState = generateStates ? gameTreeNode.GameState.MakeMove(m) : null,
-                    Move = m
+                    Moves = new HashSet<Move>(gameTreeNode.Moves)
                 };
-                if (depth > 0)
-                    node.Children = ExpandNode(node, generateStates, depth - 1);
-                return node;
-            }).ToDictionary(x => x.Move);
+                node.Moves.Add(m);
+                if (AllNodes.TryGetValue(node, out var existingNode))
+                {
+                    return (move: m, node: existingNode);
+                }
+                else
+                {
+                    node.GameState = generateStates ? gameTreeNode.GameState.MakeMove(m) : null;
+                    if (depth > 0)
+                        node.Children = ExpandNode(node, generateStates, depth - 1);
+                    AllNodes.Add(node);
+                    return (move: m, node: node);
+                }
+                
+            }).ToDictionary(x => x.move, x => x.node);
         }
 
         public GameTree EvaluateTree(GameTree gameTree)
@@ -161,11 +170,7 @@ namespace TreeSearchLib
                 }
                 else
                 {
-                    yield return new Move()
-                    {
-                        Row = row,
-                        Column = col
-                    };
+                    yield return new Move(row, col, gameState.PlayerTurn);
                 }
             }
         }
@@ -199,7 +204,6 @@ namespace TreeSearchLib
             return tree.Root.Children.Values.Select(x => new SearchResult()
             {
                 Evaluation = x.Evaluation.Value,
-                Move = x.Move,
                 GameState = x.GameState
             });
         }

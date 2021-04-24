@@ -41,11 +41,7 @@ namespace GomokuWebUI
                 throw new Exception("Move out of order");
             }
 
-            MakeMove(new Move()
-            {
-                Row = row,
-                Column = col
-            });
+            MakeMove(new Move(row, col, PColor));
         }
 
         public void MakeComputerMove()
