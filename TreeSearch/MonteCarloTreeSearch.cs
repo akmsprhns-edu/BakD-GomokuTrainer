@@ -8,14 +8,15 @@ namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
-        public readonly int PLAYOUT_DEPTH;
-        public readonly int ITERATIONS;
+        protected int PLAYOUT_DEPTH;
+        protected int ITERATIONS;
+        public readonly bool EnableLogging;
 
-
-        public MonteCarloTreeSearch()
+        public MonteCarloTreeSearch(bool enableLogging = false)
         {
             PLAYOUT_DEPTH = 999;
             ITERATIONS = 15000;
+            EnableLogging = enableLogging;
         }
 
         protected override float EvaluateState(GameState gameState)
@@ -163,19 +164,26 @@ namespace TreeSearchLib
             {
                 if (currentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
                 {
-                    Console.WriteLine("Current node changed." +
-                        $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" + 
-                        $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
+                    if (EnableLogging)
+                    {
+                        Console.WriteLine("Current node changed." +
+                            $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" +
+                            $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
+                    }
                     currentTreeNode = newNode;
-                    
-                    Console.WriteLine(currentTreeNode.GameState.DrawBoard());
-                    Console.WriteLine($"MCTS evaluated moves for {currentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(currentTreeNode.Children));
+                    if (EnableLogging)
+                    {
+                        Console.WriteLine(currentTreeNode.GameState.DrawBoard());
+                        Console.WriteLine($"MCTS evaluated moves for {currentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(currentTreeNode.Children));
+                    }
 
                     AllNodes.RemoveWhere(x => x.Moves.Count < currentTreeNode.Moves.Count);
                 }
                 else
                 {
-                    //Console.WriteLine("Unable to coninue current tree");
+                    if (EnableLogging)
+                        Console.WriteLine("Unable to coninue current tree");
+
                     currentTreeNode = null;
                 }
             }
@@ -185,11 +193,11 @@ namespace TreeSearchLib
         {
             turn++;
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
-            if (currentTreeNode == null)
-            {
+            //if (currentTreeNode == null)
+            //{
                 var gameTree = BuildTree(gameState, false, onlyPriorityMoves: true);
                 currentTreeNode = gameTree.Root;
-            }
+            //}
 
             //Console.WriteLine("Current MCTS node: \n" + currentTreeNode.GameState.DrawBoard());
 
@@ -215,12 +223,14 @@ namespace TreeSearchLib
                 
             var maxN = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
             var bestNode = currentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
-            
-            Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
-            Console.WriteLine($"maxN={maxN}");
-            Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Key)} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
-            Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
-            Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
+            if (EnableLogging)
+            {
+                Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
+                Console.WriteLine($"maxN={maxN}");
+                Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Key)} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
+                Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+                Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
+            }
             return bestNode.Key;
         }
         public override string PrintCurrentStateMoveInfo()

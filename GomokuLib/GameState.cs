@@ -42,7 +42,7 @@ namespace GomokuLib
         {
             if(!IsValidMove(row, col))
             {
-                throw new GameStateException($"Impossible move, [{row},{col}] aledy occupied");
+                throw new GameStateException($"Impossible move, [{row},{col}] aledy occupied:\n" + DrawBoard());
             }
 
             var newBoardState = Board.MakeMove(row, col);

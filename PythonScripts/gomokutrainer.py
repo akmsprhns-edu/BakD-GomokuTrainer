@@ -115,15 +115,18 @@ def create_model():
     [
       keras.Input(shape=input_len, name="input"),
       layers.Reshape(input_shape),
-      layers.Conv2D(32, kernel_size=(3, 3), kernel_initializer=keras.initializers.HeNormal()),
+      layers.Conv2D(32, kernel_size=(3, 3),
+        kernel_initializer=keras.initializers.HeNormal()),
       layers.LeakyReLU(alpha=0.2),
       layers.MaxPooling2D((2, 2)),
-      layers.Conv2D(32, kernel_size=(3, 3), kernel_initializer=keras.initializers.HeNormal()),
+      layers.Conv2D(32, kernel_size=(3, 3),
+        kernel_initializer=keras.initializers.HeNormal()),
       layers.LeakyReLU(alpha=0.2),
       layers.Flatten(),
-      layers.Dense(32, kernel_initializer=keras.initializers.HeNormal()),
+      layers.Dense(32,
+        kernel_initializer=keras.initializers.HeNormal()),
       layers.LeakyReLU(alpha=0.2),
-      layers.Dense(1, activation='sigmoid', name="output")
+      layers.Dense(1, activation='tanh', name="output")
     ]
   )
 def save_solver(solver, dir: str):
@@ -172,7 +175,7 @@ def run_solver(solver, iteration_count: int, result_dir: str, estimator_exe_path
       list_of_flat_weights, 
       get_iteration_dir(result_dir, iteration), 
       keep_files= iteration % 5 == 0,
-      save_keras_model= iteration % 100 == 0
+      save_keras_model= iteration > 0 and iteration % 100 == 0
     )
     solver.tell(eval_result)
     save_solver(solver, result_dir)

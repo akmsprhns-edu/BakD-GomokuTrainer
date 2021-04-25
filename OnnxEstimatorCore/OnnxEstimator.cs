@@ -93,7 +93,7 @@ namespace OnnxEstimatorLib
                         }));
                     }
 
-                    var batchSize = 1;
+                    var batchSize = 16;
                     var batchNumber = 0;
                     while (true)
                     {
