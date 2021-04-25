@@ -13,7 +13,7 @@ namespace TreeSearchLib
 
         protected override float EvaluateState(GameState gameState)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)
@@ -101,27 +101,23 @@ namespace TreeSearchLib
 
         }
         private static int turn = 0;
-        private GameResult? MCTSRun(GameTreeNode node)
+        private float MCTSRun(GameTreeNode node)
         {
-            GameResult? playoutGameResult;
+            float? evaluation = null;
+            GameResult? simulationResult = null;
+            GameState playoutGameState = null;
             if (node.GameState is null)
                 throw new ArgumentNullException(nameof(node.GameState));
 
             var isGameOverResult = node.GameState.IsGameOver();
             if (isGameOverResult != null)
             {
-                playoutGameResult = isGameOverResult;
+                simulationResult = isGameOverResult;
             }
             else if (node.Evals.Count == 0) // new node found
             {
-                //evaluation = EvaluateState(node.GameState);
-                //evaluation = MCTSPlayout(node.GameState, PLAYOUT_DEPTH); //New evaluation
-                //if (!maximize)
-                //    evaluation = 1 - evaluation;
-                var playoutGameState = MCTSPlayout(node.GameState, PLAYOUT_DEPTH);
-                playoutGameResult = playoutGameState.IsGameOver();
-                //if (turn > 7)
-                    //Console.WriteLine(playoutGameState.DrawBoard());
+                playoutGameState = MCTSPlayout(node.GameState, PLAYOUT_DEPTH);
+                simulationResult = playoutGameState.IsGameOver();
             } 
             else
             {
@@ -132,7 +128,7 @@ namespace TreeSearchLib
                 if (!node.Children.Any())
                 {
                     //no more moves, tie
-                    playoutGameResult = GameResult.Tie;
+                    simulationResult = GameResult.Tie;
                 }
                 else
                 {
@@ -149,84 +145,51 @@ namespace TreeSearchLib
                         if (bestUCB == double.MaxValue)
                             break; //Stop if maximal value found
                     }
-                    //var bestChild = node.Children.ToList()[Random.Next(node.Children.Count())];
                     if (bestChild.Value.Value.GameState is null)
                     {
                         bestChild.Value.Value.GameState = node.GameState.MakeMove(bestChild.Value.Key);
                     }
 
-                    playoutGameResult = MCTSRun(bestChild.Value.Value); // Evaluation backpropagation
+                    evaluation = MCTSRun(bestChild.Value.Value); // Evaluation backpropagation
                 }
 
             }
-            //else
-            //{ 
-            //    if (node.Children is null)
-            //    {
-            //        node.Children = ExpandNode(node);
-            //    }
-            //    if (!node.Children.Any())
-            //    {
-            //        //no more moves, tie
-            //        evaluation = 0.5;
-            //    }
-            //    else
-            //    {
-            //        double bestUCB = double.MinValue;
-            //        GameTreeNode bestChild = null;
-            //        foreach (var child in node.Children)
-            //        {
-            //            var ucb = UCB(child.Evals.DefaultIfEmpty().Average(), node.Evals.Count(), child.Evals.Count());
-            //            if (ucb >= bestUCB)
-            //            {
-            //                bestUCB = ucb;
-            //                bestChild = child;
-            //            }
-            //            if (bestUCB == double.MaxValue)
-            //                break; //Stop if maximal value found
-            //        }
 
-            //        evaluation = EvaluateState(node.GameState);
-            //        //evaluation = MCTSRun(bestChild, reverseEvaluation); // Evaluation backpropagation
-            //    }
-            //}
-
-            double evaluation;
-
-            if (playoutGameResult != null)
+            if (evaluation == null)
             {
-                if (node.GameState.PlayerTurn == PlayerColor.Black)
+                if (simulationResult != null)
                 {
-                    evaluation = playoutGameResult.Value switch
+                    evaluation = simulationResult.Value switch
                     {
                         GameResult.WhiteWon => 1,
                         GameResult.BlackWon => -1,
                         GameResult.Tie => 0,
                         _ => throw new NotImplementedException()
                     };
-
                 }
-                else if (node.GameState.PlayerTurn == PlayerColor.White)
+                else if(playoutGameState != null)
                 {
-                    evaluation = playoutGameResult.Value switch
-                    {
-                        GameResult.BlackWon => 1,
-                        GameResult.WhiteWon => -1,
-                        GameResult.Tie => 0,
-                        _ => throw new NotImplementedException()
-                    };
+                    evaluation = EvaluateState(playoutGameState);
                 } else
                 {
-                    throw new NotImplementedException();
+                    throw new Exception("Something went wrong, unable to obtain evaluation");
                 }
+            }
+
+            if (node.GameState.PlayerTurn == PlayerColor.Black)
+            {
+                node.Evals.Add(evaluation.Value);
+
+            }
+            else if (node.GameState.PlayerTurn == PlayerColor.White)
+            {
+                node.Evals.Add(-evaluation.Value);
             }
             else
             {
-                evaluation = 0;
+                throw new NotImplementedException();
             }
-
-            node.Evals.Add(evaluation);
-            return playoutGameResult;
+            return evaluation.Value;
         }
         public GameTreeNode currentTreeNode = null;
 
