@@ -8,8 +8,15 @@ namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
-        public static readonly int PLAYOUT_DEPTH = 999;
-        public static readonly int ITERATIONS = 15000;
+        public readonly int PLAYOUT_DEPTH;
+        public readonly int ITERATIONS;
+
+
+        public MonteCarloTreeSearch()
+        {
+            PLAYOUT_DEPTH = 999;
+            ITERATIONS = 15000;
+        }
 
         protected override float EvaluateState(GameState gameState)
         {
@@ -27,58 +34,16 @@ namespace TreeSearchLib
             {
                 return double.MaxValue;
             }
-            return avgEval + Math.Sqrt(Math.Log(parentN) / childN);
+            return avgEval + Math.Sqrt(2*Math.Log(parentN) / childN);
             //return avgEval;
         }
-        //private static GameTreeNode MCTSSelect(GameTreeNode node)
-        //{
-        //    if(node.Children is null)
-        //    {
-        //        return node;
-        //    }
-        //    double bestUCB = double.MinValue;
-        //    GameTreeNode bestChild = null;
-        //    foreach (var child in node.Children)
-        //    {
-        //        var ucb = UCB(child.Evals.Average(), node.Evals.Count(), child.Evals.Count());
-        //        if (ucb > bestUCB)
-        //        {
-        //            bestUCB = ucb;
-        //            bestChild = child;
-        //        }
-        //        if(bestUCB == double.MaxValue)
-        //            break; //Stop if maximal value found
-        //    }
-        //    return MCTSSelect(bestChild);
-        //}
-        //private double MCTSPlayout(GameState sourceGameState, int maxDepth)
-        //{
-        //    var gameState = sourceGameState.Copy();
-        //    for (var depth = 0; depth < maxDepth; ++depth)
-        //    {
-        //        var gameOver = gameState.IsGameOver();
-        //        if (gameOver != null)
-        //        {
-        //            if (gameOver.Value == GameResult.WhiteWon)
-        //            {
-        //                //Console.WriteLine(gameState.DrawBoard());
-        //                return 1;
-        //            }
-        //            else if (gameOver.Value == GameResult.BlackWon)
-        //                return 0;
-        //            else
-        //                return 0.5;
-        //        }
 
-        //        //make random move
-        //        var moves = GetMoves(gameState).ToList();
-        //        var randomMove = moves.ElementAt(Random.Next(moves.Count()));
-        //        gameState.MakeMoveInPlace(randomMove);
-        //    }
-        //    //return EvaluateState(gameState);
-        //    return 0.5;
-
-        //}
+        public static double AVG(IEnumerable<double> source)
+        {
+            return source.DefaultIfEmpty().Average();
+            //var src = source.DefaultIfEmpty().ToList();
+            //return Math.Sqrt(src.Sum(x => x) / (double)src.Count);
+        }
 
         private GameState MCTSPlayout(GameState sourceGameState, int maxDepth)
         {
@@ -96,7 +61,6 @@ namespace TreeSearchLib
                 var randomMove = moves.ElementAt(Random.Next(moves.Count()));
                 gameState.MakeMoveInPlace(randomMove);
             }
-            //return EvaluateState(gameState);
             return gameState;
 
         }
@@ -136,7 +100,7 @@ namespace TreeSearchLib
                     KeyValuePair<PlayerMove,GameTreeNode>? bestChild = null;
                     foreach (var child in node.Children)
                     {
-                        var ucb = UCB(child.Value.Evals.DefaultIfEmpty().Average(), node.Evals.Count(), child.Value.Evals.Count());
+                        var ucb = UCB(AVG(child.Value.Evals), node.Evals.Count(), child.Value.Evals.Count());
                         if (ucb >= bestUCB)
                         {
                             bestUCB = ucb;
@@ -200,8 +164,8 @@ namespace TreeSearchLib
                 if (currentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
                 {
                     Console.WriteLine("Current node changed." +
-                        $"Previous node eval. for {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? PlayerColor.Black : PlayerColor.White)}: {currentTreeNode.Evals.DefaultIfEmpty().Average()}." + 
-                        $"New node eval. for {(newNode.GameState.PlayerTurn == PlayerColor.White ? PlayerColor.Black : PlayerColor.White)}: {newNode.Evals.DefaultIfEmpty().Average()}");
+                        $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" + 
+                        $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
                     currentTreeNode = newNode;
                     
                     Console.WriteLine(currentTreeNode.GameState.DrawBoard());
@@ -255,8 +219,8 @@ namespace TreeSearchLib
             Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
             Console.WriteLine($"maxN={maxN}");
             Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Key)} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
-            Console.WriteLine($"Best Node UCB = {UCB(bestNode.Value.Evals.DefaultIfEmpty().Average(), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
-            Console.WriteLine($"Best node average evaluation {bestNode.Value.Evals.DefaultIfEmpty().Average()}");
+            Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+            Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
             return bestNode.Key;
         }
         public override string PrintCurrentStateMoveInfo()
@@ -282,7 +246,7 @@ namespace TreeSearchLib
             {
                 move += $"{MoveToStr(item.Key), -6}|";
                 count += $"{item.Value.Evals.Count,-6}|";
-                avgEval += $"{item.Value.Evals.DefaultIfEmpty().Average(),-6:.0000}|";
+                avgEval += $"{AVG(item.Value.Evals),-6:.0000}|";
                 if(i > 15)
                 {
                     stringBuilder.AppendLine(move);
