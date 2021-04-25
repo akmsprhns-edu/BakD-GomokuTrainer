@@ -41,7 +41,7 @@ namespace GomokuWebUI
                 throw new Exception("Move out of order");
             }
 
-            MakeMove(new Move(row, col, PColor));
+            MakeMove(new PlayerMove(row, col, PColor));
         }
 
         public void MakeComputerMove()
@@ -54,7 +54,7 @@ namespace GomokuWebUI
             MakeMove(move);
         }
 
-        private void MakeMove(Move move)
+        private void MakeMove(PlayerMove move)
         {
             if(GameState.OccupiedBy(move.Row, move.Column) != StoneColor.None)
             {

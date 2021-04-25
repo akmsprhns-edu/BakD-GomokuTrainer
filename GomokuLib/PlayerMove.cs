@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace GomokuLib
 {
-    public class Move : IEquatable<Move>
+    public class PlayerMove : IEquatable<PlayerMove>
     {
         public int Row { get; set; }
         public int Column { get; set; }
         public PlayerColor ByPlayer { get; set; }
 
-        public Move(int row, int column, PlayerColor player)
+        public PlayerMove(int row, int column, PlayerColor player)
         {
             Row = row;
             Column = column;
@@ -18,10 +18,10 @@ namespace GomokuLib
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Move);
+            return Equals(obj as PlayerMove);
         }
 
-        public bool Equals(Move other)
+        public bool Equals(PlayerMove other)
         {
             return other != null &&
                    Row == other.Row &&
@@ -34,12 +34,12 @@ namespace GomokuLib
             return HashCode.Combine(Row, Column, ByPlayer);
         }
 
-        public static bool operator ==(Move left, Move right)
+        public static bool operator ==(PlayerMove left, PlayerMove right)
         {
-            return EqualityComparer<Move>.Default.Equals(left, right);
+            return EqualityComparer<PlayerMove>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Move left, Move right)
+        public static bool operator !=(PlayerMove left, PlayerMove right)
         {
             return !(left == right);
         }

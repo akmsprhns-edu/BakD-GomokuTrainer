@@ -74,7 +74,7 @@ namespace TreeSearchLib
             }
         }
 
-        public Move FindBestMoveMinMax(GameState gameState, int depth)
+        public PlayerMove FindBestMoveMinMax(GameState gameState, int depth)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
             var searchResults = new List<SearchResult>();
@@ -91,7 +91,7 @@ namespace TreeSearchLib
                         var newState = gameState.MakeMove(row, col);
                         searchResults.Add(new SearchResult() {
                             Evaluation = MinMaxSearch(depth - 1, newState),
-                            Move = new Move(row, col, gameState.PlayerTurn)
+                            Move = new PlayerMove(row, col, gameState.PlayerTurn)
                         });
                     }
                 }
@@ -119,7 +119,7 @@ namespace TreeSearchLib
             return gameTree;
         }
 
-        public Dictionary<Move,GameTreeNode> ExpandNode(GameTreeNode gameTreeNode, bool generateStates, int depth = 1, bool onlyPriorityMoves = true)
+        public Dictionary<PlayerMove,GameTreeNode> ExpandNode(GameTreeNode gameTreeNode, bool generateStates, int depth = 1, bool onlyPriorityMoves = true)
         {
             if (depth < 1)
             {
@@ -129,7 +129,7 @@ namespace TreeSearchLib
             {
                 var node = new GameTreeNode()
                 {
-                    Moves = new HashSet<Move>(gameTreeNode.Moves)
+                    Moves = new HashSet<PlayerMove>(gameTreeNode.Moves)
                 };
                 node.Moves.Add(m);
                 if (AllNodes.TryGetValue(node, out var existingNode))
@@ -159,18 +159,18 @@ namespace TreeSearchLib
             return gameTree;
         }
 
-        public IEnumerable<Move> GetMoves(GameState gameState, bool priority = true)
+        public IEnumerable<PlayerMove> GetMoves(GameState gameState, bool priority = true)
         {
-            foreach ((var row, var col) in gameState.GetUnoccupiedPositions())
+            foreach (var position in gameState.GetUnoccupiedPositions())
             {
 
-                if (priority && !gameState.IsPriorityMove(row, col))
+                if (priority && !gameState.IsPriorityMove(position.row, position.colmun))
                 {
                     continue;
                 }
                 else
                 {
-                    yield return new Move(row, col, gameState.PlayerTurn);
+                    yield return new PlayerMove(position.row, position.colmun, gameState.PlayerTurn);
                 }
             }
         }
@@ -235,7 +235,7 @@ namespace TreeSearchLib
         /// Feedback to tree search, to tell witch move was made
         /// </summary>
         /// <param name="move"></param>
-        public virtual void MoveCurrentTreeNode(Move move)
+        public virtual void MoveCurrentTreeNode(PlayerMove move)
         {
 
         }
@@ -245,7 +245,7 @@ namespace TreeSearchLib
             return "";
         }
 
-        public virtual Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)
+        public virtual PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
 

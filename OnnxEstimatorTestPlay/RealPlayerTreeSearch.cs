@@ -26,14 +26,14 @@ namespace OnnxEstimatorLib
             throw new NotImplementedException();
         }
 
-        public override Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)
+        public override PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
             Console.Write("Enter move: ");
             string userInput = Console.ReadLine();
             var userInputSplit = userInput.Split();
             int col = userInputSplit[0].ToUpper()[0] - 65;
             int row = 15 - int.Parse(userInputSplit[1]);
-            return new Move(row , col, gameState.PlayerTurn);
+            return new PlayerMove(row , col, gameState.PlayerTurn);
         }
 
         //protected override List<float> EvaluateStates(IEnumerable<GameState> gameStates)

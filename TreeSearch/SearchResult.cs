@@ -8,7 +8,7 @@ namespace TreeSearchLib
     public class SearchResult
     {
         public float Evaluation { get; set; }
-        public Move Move { get; set; }
+        public PlayerMove Move { get; set; }
         public GameState GameState { get; set; }
     }
 }

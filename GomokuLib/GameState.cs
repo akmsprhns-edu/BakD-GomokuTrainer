@@ -18,7 +18,7 @@ namespace GomokuLib
             Board = board;
         }
 
-        public void MakeMoveInPlace(Move move)
+        public void MakeMoveInPlace(PlayerMove move)
         {
             MakeMoveInPlace(move.Row, move.Column);
         }
@@ -33,7 +33,7 @@ namespace GomokuLib
             Board.MakeMoveInPlace(row, col);
         }
 
-        public GameState MakeMove(Move move)
+        public GameState MakeMove(PlayerMove move)
         {
             return MakeMove(move.Row, move.Column);
         }

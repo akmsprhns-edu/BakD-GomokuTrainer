@@ -10,9 +10,9 @@ namespace TreeSearchLib
     public class GameTreeNode
     {
         public GameState GameState { get; set; }
-        public Dictionary<Move, GameTreeNode> Children { get; set; }
+        public Dictionary<PlayerMove, GameTreeNode> Children { get; set; }
         //public Move Move { get; set; }
-        public HashSet<Move> Moves { get; set; }
+        public HashSet<PlayerMove> Moves { get; set; }
 
         ///// <summary>
         ///// Node vists by MCTS
@@ -28,7 +28,7 @@ namespace TreeSearchLib
         public GameTreeNode()
         {
             Evals = new List<double>();
-            Moves = new HashSet<Move>();
+            Moves = new HashSet<PlayerMove>();
         }
         public IEnumerable<GameTreeNode> GetEndNodes()
         {

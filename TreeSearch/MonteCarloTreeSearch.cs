@@ -137,7 +137,7 @@ namespace TreeSearchLib
                 else
                 {
                     double bestUCB = double.MinValue;
-                    KeyValuePair<Move,GameTreeNode>? bestChild = null;
+                    KeyValuePair<PlayerMove,GameTreeNode>? bestChild = null;
                     foreach (var child in node.Children)
                     {
                         var ucb = UCB(child.Value.Evals.DefaultIfEmpty().Average(), node.Evals.Count(), child.Value.Evals.Count());
@@ -230,7 +230,7 @@ namespace TreeSearchLib
         }
         public GameTreeNode currentTreeNode = null;
 
-        public override void MoveCurrentTreeNode(Move move)
+        public override void MoveCurrentTreeNode(PlayerMove move)
         {
             if (currentTreeNode != null)
             {
@@ -254,7 +254,7 @@ namespace TreeSearchLib
             }
         }
 
-        public override Move FindBestMove(GameState gameState, bool batch = true, int depth = 1)
+        public override PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
             turn++;
             var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
@@ -304,7 +304,7 @@ namespace TreeSearchLib
             }
             return "";
         }
-        public static string PrintMoveInfo(Dictionary<Move, GameTreeNode> dict)
+        public static string PrintMoveInfo(Dictionary<PlayerMove, GameTreeNode> dict)
         {
             if(dict == null || !dict.Any())
             {
@@ -343,7 +343,7 @@ namespace TreeSearchLib
             return stringBuilder.ToString();
         }
 
-        public static string MoveToStr(Move move)
+        public static string MoveToStr(PlayerMove move)
         {
             return $"{(char)(move.Column + 65)}{15 - move.Row}";
         }
