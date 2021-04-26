@@ -126,8 +126,8 @@ namespace TreeSearchLib
                 {
                     evaluation = simulationResult.Value switch
                     {
-                        GameResult.WhiteWon => 1,
-                        GameResult.BlackWon => -1,
+                        GameResult.FirstPlayerWon => 1,
+                        GameResult.SecondPlayerWon => -1,
                         GameResult.Tie => 0,
                         _ => throw new NotImplementedException()
                     };
@@ -141,12 +141,12 @@ namespace TreeSearchLib
                 }
             }
 
-            if (node.GameState.PlayerTurn == PlayerColor.Black)
+            if (node.GameState.PlayerTurn == PlayerColor.Second)
             {
                 node.Evals.Add(evaluation.Value);
 
             }
-            else if (node.GameState.PlayerTurn == PlayerColor.White)
+            else if (node.GameState.PlayerTurn == PlayerColor.First)
             {
                 node.Evals.Add(-evaluation.Value);
             }
@@ -167,8 +167,8 @@ namespace TreeSearchLib
                     if (EnableLogging)
                     {
                         Console.WriteLine("Current node changed." +
-                            $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" +
-                            $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.White ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
+                            $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" +
+                            $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
                     }
                     currentTreeNode = newNode;
                     if (EnableLogging)
@@ -192,12 +192,20 @@ namespace TreeSearchLib
         public override PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
             turn++;
-            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
-            //if (currentTreeNode == null)
-            //{
+            var Maximize = gameState.PlayerTurn == PlayerColor.First ? true : false;
+
+            if (currentTreeNode != null && !currentTreeNode.GameState.Equals(gameState))
+            {
+                if (EnableLogging)
+                    Console.WriteLine("MCTS FindBestMove: CurrentTreeNode.GameState NOT equal passed gameState. Resseting tree");
+                currentTreeNode = null;
+            }
+
+            if (currentTreeNode == null)
+            {
                 var gameTree = BuildTree(gameState, false, onlyPriorityMoves: true);
                 currentTreeNode = gameTree.Root;
-            //}
+            }
 
             //Console.WriteLine("Current MCTS node: \n" + currentTreeNode.GameState.DrawBoard());
 

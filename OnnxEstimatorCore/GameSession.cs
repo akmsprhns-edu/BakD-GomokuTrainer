@@ -5,38 +5,38 @@ namespace OnnxEstimatorLib
 {
     public class GameSession
     {
-        public Player PlayerWhite { get; }
-        public Player PlayerBlack { get; }
+        public Player PlayerFirst { get; }
+        public Player PlayerSecond { get; }
 
         public GameState GameState { get; private set; }
 
-        public GameSession(Player playerWhite, Player playerBlack, GameState gameState)
+        public GameSession(Player playerFirst, Player playerSecond, GameState gameState)
         {
-            PlayerWhite = playerWhite;
-            PlayerBlack = playerBlack;
+            PlayerFirst = playerFirst;
+            PlayerSecond = playerSecond;
             GameState = gameState;
         }
         public GameResult Run(bool log = false)
         {
             if (log)
             {
-                Console.WriteLine($"Player {PlayerWhite.Name} play as white");
-                Console.WriteLine($"Player {PlayerBlack.Name} play as black");
+                Console.WriteLine($"Player {PlayerFirst.Name} plays first");
+                Console.WriteLine($"Player {PlayerSecond.Name} plays second");
             }
             Player currentPlayer;
             while (true)
             {
                 currentPlayer = GameState.PlayerTurn switch
                 {
-                    PlayerColor.White => PlayerWhite,
-                    PlayerColor.Black => PlayerBlack,
+                    PlayerColor.First => PlayerFirst,
+                    PlayerColor.Second => PlayerSecond,
                     _ => throw new Exception("Unsupported player color")
                 };
 
                 var playerMove = currentPlayer.TreeSearch.FindBestMove(GameState, batch: false, depth: 2);
                 GameState = GameState.MakeMove(playerMove.Row, playerMove.Column);
-                PlayerWhite.TreeSearch.MoveCurrentTreeNode(playerMove);
-                PlayerBlack.TreeSearch.MoveCurrentTreeNode(playerMove);
+                PlayerFirst.TreeSearch.MoveCurrentTreeNode(playerMove);
+                PlayerSecond.TreeSearch.MoveCurrentTreeNode(playerMove);
                 if (log)
                 {
                     Console.WriteLine($"{currentPlayer.Name, - 15} made move {playerMove.Row}, {playerMove.Column} (row, column)");

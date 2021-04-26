@@ -6,7 +6,7 @@ using System.Text;
 
 namespace GomokuLib
 {
-    public class BoardState
+    public class BoardState : IEquatable<BoardState>
     {
         private bool[] _data;
         private bool[] _adjacentData;
@@ -24,11 +24,11 @@ namespace GomokuLib
         }
         
         private int[] _matchedIndexes = new int[0];
-        private const int _whiteColor = 0;
-        private const int _blackColor = 1;
+        private const int _firstPlayerColor = 0;
+        private const int _secondPlayerColor = 1;
         private int _moveCount;
 
-        public PlayerColor PlayerTurn { get => _moveCount % 2 == 0 ? PlayerColor.White : PlayerColor.Black; }
+        public PlayerColor PlayerTurn { get => _moveCount % 2 == 0 ? PlayerColor.First : PlayerColor.Second; }
 
         public BoardState()
         {
@@ -96,18 +96,18 @@ namespace GomokuLib
 
         public void MakeMoveInPlace(int x, int y)
         {
-            if (PlayerTurn == PlayerColor.White)
-                SetInPlace(x, y, _whiteColor);
+            if (PlayerTurn == PlayerColor.First)
+                SetInPlace(x, y, _firstPlayerColor);
             else
-                SetInPlace(x, y, _blackColor);
+                SetInPlace(x, y, _secondPlayerColor);
         }
 
         public BoardState MakeMove(int x, int y)
         {
-            if (PlayerTurn == PlayerColor.White)
-                return Set(x, y, _whiteColor);
+            if (PlayerTurn == PlayerColor.First)
+                return Set(x, y, _firstPlayerColor);
             else
-                return Set(x, y, _blackColor);
+                return Set(x, y, _secondPlayerColor);
         }
 
         private bool Get(int row, int column, int color)
@@ -117,13 +117,13 @@ namespace GomokuLib
 
         public StoneColor OccupiedBy(int row, int col)
         {
-            if (Get(row, col, _blackColor))
+            if (Get(row, col, _secondPlayerColor))
             {
-                return StoneColor.Black;
+                return StoneColor.Second;
             }
-            else if (Get(row, col, _whiteColor))
+            else if (Get(row, col, _firstPlayerColor))
             {
-                return StoneColor.White;
+                return StoneColor.First;
             }
             return StoneColor.None;
         }
@@ -169,10 +169,10 @@ namespace GomokuLib
                 var searchResult = SearchLocalPattern(pattern);
                 switch (searchResult)
                 {
-                    case PlayerColor.Black:
-                        return GameResult.BlackWon;
-                    case PlayerColor.White:
-                        return GameResult.WhiteWon;
+                    case PlayerColor.Second:
+                        return GameResult.SecondPlayerWon;
+                    case PlayerColor.First:
+                        return GameResult.FirstPlayerWon;
                 }
             }
             return null;
@@ -200,7 +200,7 @@ namespace GomokuLib
                 if (matchFound)
                 {
                     _matchedIndexes = pattern.Select(x => x + dataIndex).ToArray();
-                    var playerWon = dataIndex % 2 == _whiteColor ? PlayerColor.White : PlayerColor.Black;
+                    var playerWon = dataIndex % 2 == _firstPlayerColor ? PlayerColor.First : PlayerColor.Second;
                     return playerWon;
                 }
             }
@@ -230,7 +230,7 @@ namespace GomokuLib
                 if (matchFound)
                 {
                     _matchedIndexes = pattern.Select(x => x + dataIndex).ToArray();
-                    var playerWon = lastMove.color == _whiteColor ? PlayerColor.White : PlayerColor.Black;
+                    var playerWon = lastMove.color == _firstPlayerColor ? PlayerColor.First : PlayerColor.Second;
                     return playerWon;
                 }
             }
@@ -248,15 +248,15 @@ namespace GomokuLib
                 for (int column = 0; column < Consts.BOARD_SIZE; column++)
                 {
                     var highlight = false;
-                    if (_matchedIndexes.Contains(Index(row, column, _whiteColor)) || _matchedIndexes.Contains(Index(row, column, _blackColor)))
+                    if (_matchedIndexes.Contains(Index(row, column, _firstPlayerColor)) || _matchedIndexes.Contains(Index(row, column, _secondPlayerColor)))
                         highlight = true;
 
                     switch (OccupiedBy(row, column))
                     {
-                        case StoneColor.White:
+                        case StoneColor.First:
                             sb.Append(highlight ? 'X' : 'x');
                             break;
-                        case StoneColor.Black:
+                        case StoneColor.Second:
                             sb.Append(highlight ? 'O' : 'o');
                             break;
                         case StoneColor.None:
@@ -285,16 +285,16 @@ namespace GomokuLib
                 for (int column = 0; column < Consts.BOARD_SIZE; column++)
                 {
                     //var highlight = false;
-                    //if (_matchedIndexes.Contains(Index(row, column, _whiteColor)) || _matchedIndexes.Contains(Index(row, column, _blackColor)))
+                    //if (_matchedIndexes.Contains(Index(row, column, _firstPlayerColor)) || _matchedIndexes.Contains(Index(row, column, _secondPlayerColor)))
                     //    highlight = true;
 
                     switch (OccupiedBy(row, column))
                     {
-                        case StoneColor.White:
-                            array[row, column] = StoneColor.White;
+                        case StoneColor.First:
+                            array[row, column] = StoneColor.First;
                             break;
-                        case StoneColor.Black:
-                            array[row, column] = StoneColor.Black;
+                        case StoneColor.Second:
+                            array[row, column] = StoneColor.Second;
                             break;
                         case StoneColor.None:
                             array[row, column] = StoneColor.None;
@@ -306,6 +306,23 @@ namespace GomokuLib
             }
 
             return array;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as BoardState);
+        }
+
+        public bool Equals(BoardState other)
+        {
+            return other != null &&
+                   _moveCount == other._moveCount && 
+                   Enumerable.SequenceEqual(_data, other._data);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_moveCount);
         }
     }
 }

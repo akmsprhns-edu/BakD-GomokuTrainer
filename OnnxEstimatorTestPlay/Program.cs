@@ -88,31 +88,31 @@ namespace OnnxEstimatorTestPlay
         public static void RunGameSession(OnnxModel modelOne)
         {
             var rand = new Random();
-            Player playerWhite;
-            Player playerBlack;
+            Player playerFirst;
+            Player playerSecond;
             if (rand.NextDouble() > 0.5)
             {
-                playerWhite = CreatePlayer(modelOne);
-                playerBlack = CreateRealPlayer();
+                playerFirst = CreatePlayer(modelOne);
+                playerSecond = CreateRealPlayer();
             } else
             {
-                playerWhite = CreateRealPlayer();
-                playerBlack = CreatePlayer(modelOne);
+                playerFirst = CreateRealPlayer();
+                playerSecond = CreatePlayer(modelOne);
             }
             var gameState = GameState.NewGame();
 
-            Logger.Info($"Starting game session ({playerWhite.Name} vs {playerBlack.Name})");
+            Logger.Info($"Starting game session ({playerFirst.Name} vs {playerSecond.Name})");
 
-            Console.WriteLine($"Player {playerWhite.Name} play as white");
-            Console.WriteLine($"Player {playerBlack.Name} play as black");
+            Console.WriteLine($"Player {playerFirst.Name} plays first");
+            Console.WriteLine($"Player {playerSecond.Name} plays second");
 
             Player currentPlayer;
             while (true)
             {
                 currentPlayer = gameState.PlayerTurn switch
                 {
-                    PlayerColor.White => playerWhite,
-                    PlayerColor.Black => playerBlack,
+                    PlayerColor.First => playerFirst,
+                    PlayerColor.Second => playerSecond,
                     _ => throw new Exception("Unsupported player color")
                 };
 
@@ -126,12 +126,12 @@ namespace OnnxEstimatorTestPlay
                 //    }
                 //}
                 Console.WriteLine("Suggested moves:");
-                playerWhite.TreeSearch.PrintCurrentStateMoveInfo();
-                playerBlack.TreeSearch.PrintCurrentStateMoveInfo();
+                playerFirst.TreeSearch.PrintCurrentStateMoveInfo();
+                playerSecond.TreeSearch.PrintCurrentStateMoveInfo();
                 var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState, depth: 2);
                 gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
-                playerWhite.TreeSearch.MoveCurrentTreeNode(playerMove);
-                playerBlack.TreeSearch.MoveCurrentTreeNode(playerMove);
+                playerFirst.TreeSearch.MoveCurrentTreeNode(playerMove);
+                playerSecond.TreeSearch.MoveCurrentTreeNode(playerMove);
                 //if (log)
                 //{
                 Console.WriteLine($"{currentPlayer.Name,-15} made move {playerMove.Row}, {playerMove.Column} (row, column)");

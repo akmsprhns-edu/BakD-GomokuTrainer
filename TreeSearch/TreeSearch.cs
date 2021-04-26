@@ -23,19 +23,19 @@ namespace TreeSearchLib
         protected abstract List<float> EvaluateStates(IEnumerable<GameState> gameStates);
         protected float MinMaxSearch(int depth, GameState sourceState)
         {
-            var Maximize = sourceState.PlayerTurn == PlayerColor.White ? true : false;
+            var Maximize = sourceState.PlayerTurn == PlayerColor.First ? true : false;
             var gameResult = sourceState.IsGameOver();
-            if (gameResult == GameResult.WhiteWon)
+            if (gameResult == GameResult.FirstPlayerWon)
             {
-                if (sourceState.PlayerTurn == PlayerColor.White)
-                    throw new Exception("Something went wrong, white won, but its whites turn");
+                if (sourceState.PlayerTurn == PlayerColor.First)
+                    throw new Exception("Something went wrong, first player won, but its NOT second player's turn");
 
                 return 1;
             }
-            else if (gameResult == GameResult.BlackWon)
+            else if (gameResult == GameResult.SecondPlayerWon)
             {
-                if (sourceState.PlayerTurn == PlayerColor.Black)
-                    throw new Exception("Something went wrong, black won, but its blacks turn");
+                if (sourceState.PlayerTurn == PlayerColor.Second)
+                    throw new Exception("Something went wrong, second player won, but its NOT first player's turn");
 
                 return 0;
             }
@@ -76,7 +76,7 @@ namespace TreeSearchLib
 
         public PlayerMove FindBestMoveMinMax(GameState gameState, int depth)
         {
-            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
+            var Maximize = gameState.PlayerTurn == PlayerColor.First ? true : false;
             var searchResults = new List<SearchResult>();
             for (var row = 0; row < GameState.BoardSize; row++)
             {
@@ -247,7 +247,7 @@ namespace TreeSearchLib
 
         public virtual PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
         {
-            var Maximize = gameState.PlayerTurn == PlayerColor.White ? true : false;
+            var Maximize = gameState.PlayerTurn == PlayerColor.First ? true : false;
 
             List<SearchResult> searchResults;
             if (depth > 1)

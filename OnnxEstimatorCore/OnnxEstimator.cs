@@ -185,15 +185,15 @@ namespace OnnxEstimatorLib
             var gameResult = gameSession.Run(log: _LOG);
             var duration = DateTime.Now - start;
             string logMsg = $"Game session ({modelOne.Number} vs {modelTwo.Number}) ended in {duration} s. Game result: {gameResult}.\n" + gameSession.GameState.DrawBoard();
-            if (gameResult == GameResult.WhiteWon)
+            if (gameResult == GameResult.FirstPlayerWon)
             {
-                logMsg += $"\nModel {gameSession.PlayerWhite.Name} won";
+                logMsg += $"\nModel {gameSession.PlayerFirst.Name} won";
                 Logger.Info(logMsg);
                 return modelOne;
             }
-            if (gameResult == GameResult.BlackWon)
+            if (gameResult == GameResult.SecondPlayerWon)
             {
-                logMsg += $"\nModel {gameSession.PlayerBlack.Name} won";
+                logMsg += $"\nModel {gameSession.PlayerSecond.Name} won";
                 Logger.Info(logMsg);
                 return modelTwo;
             }

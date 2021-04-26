@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace GomokuLib
 {
-    public class GameState
+    public class GameState : IEquatable<GameState>
     {
         private BoardState Board;
         public static int BoardSize { get => Consts.BOARD_SIZE; }
@@ -137,6 +137,22 @@ namespace GomokuLib
         public StoneColor[,] Get2DArrary()
         {
             return Board.Get2DArrary();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as GameState);
+        }
+
+        public bool Equals(GameState other)
+        {
+            return other != null &&
+                   Board.Equals(other.Board);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Board);
         }
     }
 }

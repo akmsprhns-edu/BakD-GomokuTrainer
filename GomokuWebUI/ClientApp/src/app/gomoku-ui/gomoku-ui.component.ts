@@ -3,15 +3,15 @@ import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
 
 enum StoneColor {
-  Black = 1,
-  White = 2,
+  First = 1,
+  Second = 2,
   None = 0
 }
 
 enum GameResult {
   Tie = 0,
-  WhiteWon = 2,
-  BlackWon = 1
+  FirstPlayerWon = 1,
+  SecondPlayerWon = 2
 }
 
 @Component({
@@ -44,7 +44,7 @@ export class GomokuUiComponent implements OnInit {
     if(this.gameSession.board[row][col] != StoneColor.None){
       return;
     } else {
-      this.gameSession.board[row][col] = StoneColor.White;
+      this.gameSession.board[row][col] = StoneColor.First;
       let request = <MoveRequest>{
         gameSessionGuid: this.gameSession.guid,
         row: row,

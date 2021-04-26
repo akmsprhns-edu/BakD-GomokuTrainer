@@ -17,12 +17,12 @@ namespace GomokuWebUI
         public GameState GameState { get; private set; }
         private TreeSearch AITreeSearch { get; set; }
         private PlayerColor PColor { get; set; }
-        private PlayerColor AIColor { get => PColor == PlayerColor.White ? PlayerColor.Black : PlayerColor.White; }
+        private PlayerColor AIColor { get => PColor == PlayerColor.First ? PlayerColor.Second : PlayerColor.First; }
         public PvEGameSession(string guid, AIType aiType)
         {
             Guid = guid;
             GameState = GameState.NewGame();
-            PColor = PlayerColor.White;
+            PColor = PlayerColor.First;
             if(aiType == AIType.PureMonteCarlo)
             {
                 AITreeSearch = new MonteCarloTreeSearch();

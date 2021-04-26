@@ -80,22 +80,22 @@ namespace OnnxEstimatorTest
 
         public static void RunGameSession(OnnxModel modelOne, OnnxModel modelTwo)
         {
-            var playerWhite = CreatePlayer(modelOne);
-            var playerBlack = CreatePlayer(modelTwo);
+            var playerFirst = CreatePlayer(modelOne);
+            var playerSecond = CreatePlayer(modelTwo);
             var gameState = GameState.NewGame();
 
             Logger.Info($"Starting game session ({modelOne.Number} vs {modelTwo.Number})");
 
-                Console.WriteLine($"Player {playerWhite.Name} play as white");
-                Console.WriteLine($"Player {playerBlack.Name} play as black");
+                Console.WriteLine($"Player {playerFirst.Name} plays first");
+                Console.WriteLine($"Player {playerSecond.Name} plays second");
 
             Player currentPlayer;
             while (true)
             {
                 currentPlayer = gameState.PlayerTurn switch
                 {
-                    PlayerColor.White => playerWhite,
-                    PlayerColor.Black => playerBlack,
+                    PlayerColor.First => playerFirst,
+                    PlayerColor.Second => playerSecond,
                     _ => throw new Exception("Unsupported player color")
                 };
 
