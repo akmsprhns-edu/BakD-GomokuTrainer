@@ -15,6 +15,7 @@ namespace GomokuWebUI
     {
         public string Guid { get; private set; }
         public GameState GameState { get; private set; }
+        public Dictionary<string, int> Moves { get; private set; }
         private TreeSearch AITreeSearch { get; set; }
         private PlayerColor PColor { get; set; }
         private PlayerColor AIColor { get => PColor == PlayerColor.First ? PlayerColor.Second : PlayerColor.First; }
@@ -22,10 +23,11 @@ namespace GomokuWebUI
         {
             Guid = guid;
             GameState = GameState.NewGame();
+            Moves = new Dictionary<string, int>();
             PColor = PlayerColor.First;
             if(aiType == AIType.PureMonteCarlo)
             {
-                AITreeSearch = new MonteCarloTreeSearch();
+                AITreeSearch = new MonteCarloTreeSearch(true);
             }
             else
             {
@@ -62,6 +64,7 @@ namespace GomokuWebUI
             }
             AITreeSearch.MoveCurrentTreeNode(move);
             GameState = GameState.MakeMove(move);
+            Moves[$"{move.Row}-{move.Column}"] = Moves.Count + 1;
         }
     }
 }

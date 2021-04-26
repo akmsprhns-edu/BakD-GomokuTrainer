@@ -235,7 +235,7 @@ namespace TreeSearchLib
             {
                 Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
                 Console.WriteLine($"maxN={maxN}");
-                Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={MoveToStr(bestNode.Key)} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
+                Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={bestNode.Key} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
                 Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
                 Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
             }
@@ -262,7 +262,7 @@ namespace TreeSearchLib
             var i = 0;
             foreach(var item in dict.ToList().OrderBy(x => x.Key.Column).ThenByDescending(x => x.Key.Row))
             {
-                move += $"{MoveToStr(item.Key), -6}|";
+                move += $"{item.Key, -6}|";
                 count += $"{item.Value.Evals.Count,-6}|";
                 avgEval += $"{AVG(item.Value.Evals),-6:.0000}|";
                 if(i > 15)
@@ -286,11 +286,6 @@ namespace TreeSearchLib
                 stringBuilder.AppendLine(avgEval);
             }
             return stringBuilder.ToString();
-        }
-
-        public static string MoveToStr(PlayerMove move)
-        {
-            return $"{(char)(move.Column + 65)}{15 - move.Row}";
         }
     }
 }

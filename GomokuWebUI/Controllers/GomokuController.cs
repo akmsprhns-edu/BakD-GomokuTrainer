@@ -56,7 +56,9 @@ namespace GomokuWebUI.Controllers
             {
                 Guid = gameSession.Guid,
                 Board = gameSession.GameState.Get2DArrary(),
-                GameResult = gameSession.GameState.IsGameOver()
+                GameResult = gameSession.GameState.IsGameOver(),
+                Moves = gameSession.Moves
+                
             };
 
             return JsonConvert.SerializeObject(gameSessionResponse, new JsonSerializerSettings

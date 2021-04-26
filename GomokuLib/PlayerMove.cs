@@ -34,6 +34,11 @@ namespace GomokuLib
             return HashCode.Combine(Row, Column, ByPlayer);
         }
 
+        public override string ToString()
+        {
+            return $"{(char)(Column + 65)}{Consts.BOARD_SIZE - Row}";
+        }
+
         public static bool operator ==(PlayerMove left, PlayerMove right)
         {
             return EqualityComparer<PlayerMove>.Default.Equals(left, right);

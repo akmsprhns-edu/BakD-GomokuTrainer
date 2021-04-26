@@ -26,6 +26,7 @@ export class GomokuUiComponent implements OnInit {
   public gameResultType = GameResult;
   public gameSession: GameSession;
   public moveInProgress = false;
+  public showMoveNumbers = false;
   private _httpClient: HttpClient
   constructor(httpClient: HttpClient) {
     this._httpClient = httpClient;
@@ -64,12 +65,21 @@ export class GomokuUiComponent implements OnInit {
     }
   }
 
+  public ShowMoveNumbersChanged(state: boolean){
+    this.showMoveNumbers = state;
+  }
+
+  public GetMoveNumber(row: number, column: number){
+    return this.gameSession.moves[`${row}-${column}`];
+  }
+
 }
 
 interface GameSession {
   guid: string;
   board: StoneColor[][];
   gameResult?: GameResult;
+  moves: any
 }
 
 interface MoveRequest {

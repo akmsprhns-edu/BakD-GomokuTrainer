@@ -1,10 +1,14 @@
 <div class="d-flex">
+  <div></div>
   <table *ngIf="gameSession" class="table-board">
     <tr *ngFor="let row of gameSession.board; index as rowIdx">
       <td>{{gameSession.board[0].length - rowIdx}}</td>
       <td *ngFor="let cell of row; index as colIdx" (click)="makeMove(rowIdx, colIdx)">
-        <div *ngIf="cell === playerType.Second" class="circle circle-second-player"></div>
-        <div *ngIf="cell === playerType.First" class="circle circle-first-player"></div>
+        <div *ngIf="cell !== playerType.None" class="circle" 
+          [class.circle-first-player]="cell === playerType.First"
+          [class.circle-second-player]="cell === playerType.Second">
+          <span *ngIf="showMoveNumbers">{{GetMoveNumber(rowIdx,colIdx)}}</span>
+        </div>
         <div *ngIf="cell === playerType.None" class="circle"></div>
       </td>
     </tr>
@@ -15,6 +19,10 @@
       </td>
     </tr>
   </table>
+  <div>
+    <input type="checkbox" id="show-move-numbers" (click)="ShowMoveNumbersChanged($event.currentTarget.checked)">
+    <label for="show-move-numbers">Show move numbers</label><br>
+  </div>
 </div>
 <div class="d-flex">
   <div class="ms-auto me-auto">
