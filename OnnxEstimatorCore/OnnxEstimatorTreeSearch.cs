@@ -12,10 +12,10 @@ namespace OnnxEstimatorLib
     {
         private readonly InferenceSession _inferenceSession;
         public OnnxEstimatorTreeSearch(InferenceSession inferenceSession)
-            : base(false)
+            : base(true)
         {
             PLAYOUT_DEPTH = 5;
-            ITERATIONS = 500;
+            ITERATIONS = 15000;
             _inferenceSession = inferenceSession;
         }
         protected override float EvaluateState(GameState gameState)

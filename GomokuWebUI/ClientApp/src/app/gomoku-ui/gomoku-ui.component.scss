@@ -16,6 +16,10 @@ $squere-size: 45px;
     border-color: black;
     border-width: 1px;
   }
+  
+  td.selected{
+    background-color: #ff9e9e;
+  }
 
   td:first-of-type {
     width: 30px;

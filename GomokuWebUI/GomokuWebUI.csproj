@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GomokuLib\GomokuLib.csproj" />
+    <ProjectReference Include="..\OnnxEstimatorCore\OnnxEstimatorLib.csproj" />
     <ProjectReference Include="..\TreeSearch\TreeSearchLib.csproj" />
   </ItemGroup>
 

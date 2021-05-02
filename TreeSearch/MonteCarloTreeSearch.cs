@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TreeSearchLib.Extensions;
 
 namespace TreeSearchLib
 {
@@ -227,10 +228,14 @@ namespace TreeSearchLib
             //    x.Evals.Add(EvaluateState(x.GameState));
             //});
 
-            
-                
+
+
             var maxN = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
             var bestNode = currentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
+            //var maxEval = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
+            //var bestNode = currentTreeNode.Children.MaxBy(child => 
+            //    -AVG(child.Value.Children.MaxBy(subChilder => subChilder.Value.Evals.Count).Value.Evals)
+            //);
             if (EnableLogging)
             {
                 Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
@@ -259,20 +264,24 @@ namespace TreeSearchLib
             var move = "";
             var count = "";
             var avgEval = "";
+            //var childMinEval = "";
             var i = 0;
             foreach(var item in dict.ToList().OrderBy(x => x.Key.Column).ThenByDescending(x => x.Key.Row))
             {
-                move += $"{item.Key, -6}|";
-                count += $"{item.Value.Evals.Count,-6}|";
-                avgEval += $"{AVG(item.Value.Evals),-6:.0000}|";
+                move += $"{item.Key, -7}|";
+                count += $"{item.Value.Evals.Count,-7}|";
+                avgEval += $"{AVG(item.Value.Evals),-7:.0000}|";
+                //childMinEval += $"{-AVG(item.Value.Children.DefaultIfEmpty().MaxBy(subChilder => subChilder.Value.Evals.Count).Value.Evals.DefaultIfEmpty()),-7:.0000}|";
                 if(i > 15)
                 {
                     stringBuilder.AppendLine(move);
                     stringBuilder.AppendLine(count);
                     stringBuilder.AppendLine(avgEval);
+                    //stringBuilder.AppendLine(childMinEval);
                     move = "";
                     count = "";
                     avgEval = "";
+                    //childMinEval = "";
                     i = 0;
                 } else
                 {
@@ -284,6 +293,7 @@ namespace TreeSearchLib
                 stringBuilder.AppendLine(move);
                 stringBuilder.AppendLine(count);
                 stringBuilder.AppendLine(avgEval);
+                //stringBuilder.AppendLine(childMinEval);
             }
             return stringBuilder.ToString();
         }

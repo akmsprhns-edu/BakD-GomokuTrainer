@@ -3,7 +3,7 @@
   <table *ngIf="gameSession" class="table-board">
     <tr *ngFor="let row of gameSession.board; index as rowIdx">
       <td>{{gameSession.board[0].length - rowIdx}}</td>
-      <td *ngFor="let cell of row; index as colIdx" (click)="makeMove(rowIdx, colIdx)">
+      <td *ngFor="let cell of row; index as colIdx" (click)="onCellClick($event,rowIdx, colIdx)">
         <div *ngIf="cell !== playerType.None" class="circle" 
           [class.circle-first-player]="cell === playerType.First"
           [class.circle-second-player]="cell === playerType.Second">

@@ -1,4 +1,6 @@
 ﻿using GomokuLib;
+using Microsoft.ML.OnnxRuntime;
+using OnnxEstimatorLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,8 @@ namespace GomokuWebUI
 {
     public enum AIType
     {
-        PureMonteCarlo
+        PureMonteCarlo,
+        MCTSAndNeuralNet
     }
     public class PvEGameSession
     {
@@ -28,6 +31,10 @@ namespace GomokuWebUI
             if(aiType == AIType.PureMonteCarlo)
             {
                 AITreeSearch = new MonteCarloTreeSearch(true);
+            }
+            else if (aiType == AIType.MCTSAndNeuralNet)
+            {
+                AITreeSearch = new OnnxEstimatorTreeSearch(new InferenceSession(@"C:\Projects\OnnxEstimator\ModelsWebUI\model.onnx"));
             }
             else
             {

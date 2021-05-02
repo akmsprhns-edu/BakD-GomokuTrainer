@@ -37,8 +37,13 @@ export class GomokuUiComponent implements OnInit {
 
   ngOnInit(): void {
   }
-
-  public makeMove(row: number, col: number):void {
+  public onCellClick(event: MouseEvent, row: number, col: number): void  {
+    if(!event.shiftKey && !event.ctrlKey)
+      this.makeMove(row, col);
+    if(event.shiftKey && !event.ctrlKey)
+      this.selectPosition(<HTMLElement>event.currentTarget);
+  }
+  public makeMove(row: number, col: number) :void {
     if(this.moveInProgress == true || this.gameSession.gameResult != null) 
       return;
     this.moveInProgress = true;
@@ -65,11 +70,15 @@ export class GomokuUiComponent implements OnInit {
     }
   }
 
+  public selectPosition(eventTarget: HTMLElement): void{
+    eventTarget.classList.toggle("selected");
+  }
+
   public ShowMoveNumbersChanged(state: boolean){
     this.showMoveNumbers = state;
   }
 
-  public GetMoveNumber(row: number, column: number){
+  public GetMoveNumber(row: number, column: number): string{
     return this.gameSession.moves[`${row}-${column}`];
   }
 
