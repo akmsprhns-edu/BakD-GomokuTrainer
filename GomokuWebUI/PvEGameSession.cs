@@ -30,7 +30,7 @@ namespace GomokuWebUI
             PColor = PlayerColor.First;
             if(aiType == AIType.PureMonteCarlo)
             {
-                AITreeSearch = new MonteCarloTreeSearch(true);
+                AITreeSearch = new MonteCarloTreeSearch(enableLogging: true);
             }
             else if (aiType == AIType.MCTSAndNeuralNet)
             {
@@ -59,7 +59,7 @@ namespace GomokuWebUI
             {
                 throw new Exception("Move out of order");
             }
-            var move = AITreeSearch.FindBestMove(GameState, true, 1);
+            var move = AITreeSearch.FindBestMove(GameState, true);
             MakeMove(move);
         }
 

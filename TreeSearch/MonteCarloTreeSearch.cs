@@ -9,15 +9,15 @@ namespace TreeSearchLib
 {
     public class MonteCarloTreeSearch : TreeSearch
     {
-        protected int PLAYOUT_DEPTH;
-        protected int ITERATIONS;
-        public readonly bool EnableLogging;
+        protected readonly int _iterations;
+        protected readonly int _playoutDepth;
+        protected readonly bool _enableLogging;
 
-        public MonteCarloTreeSearch(bool enableLogging = false)
+        public MonteCarloTreeSearch(int iterations = 10_000, int playoutDepth = 999, bool enableLogging = false)
         {
-            PLAYOUT_DEPTH = 999;
-            ITERATIONS = 15000;
-            EnableLogging = enableLogging;
+            _iterations = iterations;
+            _playoutDepth = playoutDepth;
+            _enableLogging = enableLogging;
         }
 
         protected override float EvaluateState(GameState gameState)
@@ -82,7 +82,7 @@ namespace TreeSearchLib
             }
             else if (node.Evals.Count == 0) // new node found
             {
-                playoutGameState = MCTSPlayout(node.GameState, PLAYOUT_DEPTH);
+                playoutGameState = MCTSPlayout(node.GameState, _playoutDepth);
                 simulationResult = playoutGameState.IsGameOver();
             } 
             else
@@ -157,62 +157,61 @@ namespace TreeSearchLib
             }
             return evaluation.Value;
         }
-        public GameTreeNode currentTreeNode = null;
 
         public override void MoveCurrentTreeNode(PlayerMove move)
         {
-            if (currentTreeNode != null)
+            if (CurrentTreeNode != null)
             {
-                if (currentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
+                if (CurrentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
                 {
-                    if (EnableLogging)
+                    if (_enableLogging)
                     {
                         Console.WriteLine("Current node changed." +
-                            $"Previous node eval.: {(currentTreeNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(currentTreeNode.Evals) : AVG(currentTreeNode.Evals))};" +
+                            $"Previous node eval.: {(CurrentTreeNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(CurrentTreeNode.Evals) : AVG(CurrentTreeNode.Evals))};" +
                             $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
                     }
-                    currentTreeNode = newNode;
-                    if (EnableLogging)
+                    CurrentTreeNode = newNode;
+                    if (_enableLogging)
                     {
-                        Console.WriteLine(currentTreeNode.GameState.DrawBoard());
-                        Console.WriteLine($"MCTS evaluated moves for {currentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(currentTreeNode.Children));
+                        Console.WriteLine(CurrentTreeNode.GameState.DrawBoard());
+                        Console.WriteLine($"MCTS evaluated moves for {CurrentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(CurrentTreeNode.Children));
                     }
 
-                    AllNodes.RemoveWhere(x => x.Moves.Count < currentTreeNode.Moves.Count);
+                    AllNodes.RemoveWhere(x => x.Moves.Count < CurrentTreeNode.Moves.Count);
                 }
                 else
                 {
-                    if (EnableLogging)
+                    if (_enableLogging)
                         Console.WriteLine("Unable to coninue current tree");
 
-                    currentTreeNode = null;
+                    CurrentTreeNode = null;
                 }
             }
         }
 
-        public override PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
+        public override PlayerMove FindBestMove(GameState gameState, bool batch = true)
         {
             turn++;
             var Maximize = gameState.PlayerTurn == PlayerColor.First ? true : false;
 
-            if (currentTreeNode != null && !currentTreeNode.GameState.Equals(gameState))
+            if (CurrentTreeNode != null && !CurrentTreeNode.GameState.Equals(gameState))
             {
-                if (EnableLogging)
+                if (_enableLogging)
                     Console.WriteLine("MCTS FindBestMove: CurrentTreeNode.GameState NOT equal passed gameState. Resseting tree");
-                currentTreeNode = null;
+                CurrentTreeNode = null;
             }
 
-            if (currentTreeNode == null)
+            if (CurrentTreeNode == null)
             {
                 var gameTree = BuildTree(gameState, false, onlyPriorityMoves: true);
-                currentTreeNode = gameTree.Root;
+                CurrentTreeNode = gameTree.Root;
             }
 
             //Console.WriteLine("Current MCTS node: \n" + currentTreeNode.GameState.DrawBoard());
 
-            for (int i = 0; i < ITERATIONS; i++)
+            for (int i = 0; i < _iterations; i++)
             {
-                MCTSRun(currentTreeNode);
+                MCTSRun(CurrentTreeNode);
             }
             //var positions = gameTree.Flatten().ToList();
             //Console.WriteLine($"total positions generated to evaluate move (all/with game state) {positions.Count()} / {positions.Where(x => x.GameState != null).Count()}");
@@ -230,27 +229,27 @@ namespace TreeSearchLib
 
 
 
-            var maxN = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
-            var bestNode = currentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
+            var maxN = CurrentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
+            var bestNode = CurrentTreeNode.Children.First(x => x.Value.Evals.Count == maxN);
             //var maxEval = currentTreeNode.Children.Values.Select(x => x.Evals.Count).Max();
             //var bestNode = currentTreeNode.Children.MaxBy(child => 
             //    -AVG(child.Value.Children.MaxBy(subChilder => subChilder.Value.Evals.Count).Value.Evals)
             //);
-            if (EnableLogging)
+            if (_enableLogging)
             {
-                Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(currentTreeNode.Children));
+                Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(CurrentTreeNode.Children));
                 Console.WriteLine($"maxN={maxN}");
                 Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={bestNode.Key} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
-                Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), currentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+                Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), CurrentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
                 Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
             }
             return bestNode.Key;
         }
         public override string PrintCurrentStateMoveInfo()
         {
-            if(currentTreeNode != null)
+            if(CurrentTreeNode != null)
             {
-                return PrintMoveInfo(currentTreeNode.Children);
+                return PrintMoveInfo(CurrentTreeNode.Children);
             }
             return "";
         }

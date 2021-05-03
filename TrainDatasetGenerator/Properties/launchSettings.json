@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TrainDatasetGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\TrainDatasetGenerator\\ModelsTest"
+    }
+  }
+}

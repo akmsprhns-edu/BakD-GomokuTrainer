@@ -33,7 +33,7 @@ namespace OnnxEstimatorLib
                     _ => throw new Exception("Unsupported player color")
                 };
 
-                var playerMove = currentPlayer.TreeSearch.FindBestMove(GameState, batch: false, depth: 2);
+                var playerMove = currentPlayer.TreeSearch.FindBestMove(GameState, batch: false);
                 GameState = GameState.MakeMove(playerMove.Row, playerMove.Column);
                 PlayerFirst.TreeSearch.MoveCurrentTreeNode(playerMove);
                 PlayerSecond.TreeSearch.MoveCurrentTreeNode(playerMove);

@@ -68,10 +68,10 @@ namespace GomokuLib
             return IsInCentre(row, col) || Board.IsAnyAdjacent(row, col);
         }
 
-        private const int halfSize = (Consts.BOARD_SIZE + 1) / 2;
+        private const int centerIndex = (Consts.BOARD_SIZE + 1) / 2 - 1;
         public bool IsInCentre(int row, int col)
         {
-            return row >= halfSize - 1 && row <= halfSize + 1 && col >= halfSize - 1 && col <= halfSize + 1;
+            return row >= centerIndex - 1 && row <= centerIndex + 1 && col >= centerIndex - 1 && col <= centerIndex + 1;
         }
 
         public StoneColor OccupiedBy(int row, int col)

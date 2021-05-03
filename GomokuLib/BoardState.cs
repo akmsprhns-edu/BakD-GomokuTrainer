@@ -260,7 +260,10 @@ namespace GomokuLib
                             sb.Append(highlight ? 'O' : 'o');
                             break;
                         case StoneColor.None:
-                            sb.Append(' ');
+                            if(IsAnyAdjacent(row, column))
+                                sb.Append('.');
+                            else
+                                sb.Append(' ');
                             break;
                         default:
                             throw new BoardStateException("Unsupported board state");

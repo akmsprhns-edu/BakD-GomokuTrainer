@@ -4,8 +4,12 @@ using NLog;
 using OnnxEstimatorLib;
 using OnnxEstimatorLib.Models;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TreeSearchLib;
 
 namespace TrainDatasetGenerator
@@ -13,29 +17,62 @@ namespace TrainDatasetGenerator
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static readonly bool _LOG = false;
-        private static bool UseGpu = false;
-        private static int RunCount = 30;
+        private static int ThreadCount = 16;
         static int Main(string[] args)
         {
             try
             {
                 if (args.Length == 0)
                 {
-                    Console.WriteLine("Models folder must be specified");
+                    Console.WriteLine("Output folder must be specified");
                     return -1;
                 }
 
-                string modelsDir = args[0];
-                modelsDir = Path.GetFullPath(modelsDir);
-                ConfigureLogger(modelsDir);
-                Logger.Info($"Searching models in directory {modelsDir}");
+                string outputDir = args[0];
+                outputDir = Path.GetFullPath(outputDir);
+                ConfigureLogger(Path.Combine(outputDir,"logs"));
+                Logger.Info($"Output directory {outputDir}");
                 var random = new Random();
 
-                for (int i = 0; i < RunCount; i++)
+                var threads = new List<Thread>();
+                var positions = new ConcurrentQueue<Position>();
+                var threadFailed = false;
+
+                for (int i = 0; i < ThreadCount; ++i)
                 {
-                    RunGameSession();
+                    threads.Add(new Thread(() =>
+                    {
+                        try
+                        {
+                            while (true)
+                            {
+                                RunGameSession();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                            threadFailed = true;
+                        }
+                    }));
                 }
+
+                foreach (var thread in threads)
+                {
+                    thread.Start();
+                }
+
+                while (true)
+                {
+                    Task.Delay(TimeSpan.FromSeconds(1));
+                    if (threadFailed)
+                    {
+                        throw new Exception("Error in thread occured");
+                    }
+
+
+                }
+                
                 return 0;
             }
             catch (Exception e)
@@ -45,13 +82,13 @@ namespace TrainDatasetGenerator
             }
         }
 
-        public static void ConfigureLogger(string fileDir)
+        public static void ConfigureLogger(string logDir)
         {
             var config = new NLog.Config.LoggingConfiguration();
 
             // Targets where to log to: File and Console  yyyy-MM-dd_HH-mm-ss
             var layout = "${longdate} | ${message}";
-            var fileName = Path.GetFullPath(Path.Combine(fileDir, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log"));
+            var fileName = Path.GetFullPath(Path.Combine(logDir, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log"));
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = fileName, Layout = layout };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole") { Layout = layout };
 
@@ -66,11 +103,11 @@ namespace TrainDatasetGenerator
         public static Player CreatePlayer()
         {
 
-            var treeSearch = new MonteCarloTreeSearch(false);
+            var treeSearch = new MonteCarloTreeSearch(enableLogging: false);
             return new Player("e", treeSearch);
         }
 
-        public static void RunGameSession()
+        public static IEnumerable<Position> RunGameSession()
         {
             var player = CreatePlayer();
             var gameState = GameState.NewGame();
@@ -79,16 +116,17 @@ namespace TrainDatasetGenerator
             {
 
                 var move = player.TreeSearch.FindBestMove(gameState);
+                //foreach(var state in player.TreeSearch.)
                 gameState = gameState.MakeMove(move.Row, move.Column);
                 player.TreeSearch.MoveCurrentTreeNode(move);
-                //Logger.Info(gameState.DrawBoard());
+                Logger.Info(gameState.DrawBoard());
                 var gameResult = gameState.IsGameOver();
                 if (gameResult.HasValue)
                 {
                     break;
                 }
             }
-
+            throw new NotImplementedException();
             //Logger.Info("Game finished");
             //Logger.Info("Final game state:\n" + gameState.DrawBoard());
         }

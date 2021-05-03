@@ -12,10 +12,8 @@ namespace OnnxEstimatorLib
     {
         private readonly InferenceSession _inferenceSession;
         public OnnxEstimatorTreeSearch(InferenceSession inferenceSession)
-            : base(true)
+            : base(iterations: 15000, playoutDepth: 5, enableLogging: true)
         {
-            PLAYOUT_DEPTH = 5;
-            ITERATIONS = 15000;
             _inferenceSession = inferenceSession;
         }
         protected override float EvaluateState(GameState gameState)
@@ -57,5 +55,6 @@ namespace OnnxEstimatorLib
         //    var rand = new System.Random();
         //    return Enumerable.Range(0, gameStates.Count()).Select(x => (float)rand.NextDouble()).ToList();
         //}
+
     }
 }
