@@ -40,9 +40,9 @@ namespace TreeSearchLib
             //return avgEval;
         }
 
-        public static double AVG(IEnumerable<double> source)
+        public static double EVAL(GameTreeNode node)
         {
-            return source.DefaultIfEmpty().Average();
+            return node.Evals.DefaultIfEmpty().Average();
             //var src = source.DefaultIfEmpty().ToList();
             //return Math.Sqrt(src.Sum(x => x) / (double)src.Count);
         }
@@ -102,7 +102,7 @@ namespace TreeSearchLib
                     KeyValuePair<PlayerMove,GameTreeNode>? bestChild = null;
                     foreach (var child in node.Children)
                     {
-                        var ucb = UCB(AVG(child.Value.Evals), node.Evals.Count(), child.Value.Evals.Count());
+                        var ucb = UCB(EVAL(child.Value), node.Evals.Count(), child.Value.Evals.Count());
                         if (ucb >= bestUCB)
                         {
                             bestUCB = ucb;
@@ -167,8 +167,8 @@ namespace TreeSearchLib
                     if (_enableLogging)
                     {
                         Console.WriteLine("Current node changed." +
-                            $"Previous node eval.: {(CurrentTreeNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(CurrentTreeNode.Evals) : AVG(CurrentTreeNode.Evals))};" +
-                            $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.First ? -AVG(newNode.Evals) : AVG(newNode.Evals))}.");
+                            $"Previous node eval.: {(CurrentTreeNode.GameState.PlayerTurn == PlayerColor.First ? -EVAL(CurrentTreeNode) : EVAL(CurrentTreeNode))};" +
+                            $"New node eval.: {(newNode.GameState.PlayerTurn == PlayerColor.First ? -EVAL(newNode) : EVAL(newNode))}.");
                     }
                     CurrentTreeNode = newNode;
                     if (_enableLogging)
@@ -240,8 +240,8 @@ namespace TreeSearchLib
                 Console.WriteLine("MCTS evaluated moves: \n" + PrintMoveInfo(CurrentTreeNode.Children));
                 Console.WriteLine($"maxN={maxN}");
                 Console.WriteLine($"BestNode count={bestNode.Value.Evals.Count()}, move={bestNode.Key} or row {bestNode.Key.Row}, col {bestNode.Key.Column}");
-                Console.WriteLine($"Best Node UCB = {UCB(AVG(bestNode.Value.Evals), CurrentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
-                Console.WriteLine($"Best node average evaluation {AVG(bestNode.Value.Evals)}");
+                Console.WriteLine($"Best Node UCB = {UCB(EVAL(bestNode.Value), CurrentTreeNode.Evals.Count(), bestNode.Value.Evals.Count())}");
+                Console.WriteLine($"Best node average evaluation {EVAL(bestNode.Value)}");
             }
             return bestNode.Key;
         }
@@ -269,7 +269,7 @@ namespace TreeSearchLib
             {
                 move += $"{item.Key, -7}|";
                 count += $"{item.Value.Evals.Count,-7}|";
-                avgEval += $"{AVG(item.Value.Evals),-7:.0000}|";
+                avgEval += $"{EVAL(item.Value),-7:.0000}|";
                 //childMinEval += $"{-AVG(item.Value.Children.DefaultIfEmpty().MaxBy(subChilder => subChilder.Value.Evals.Count).Value.Evals.DefaultIfEmpty()),-7:.0000}|";
                 if(i > 15)
                 {

@@ -18,7 +18,7 @@ namespace OnnxEstimatorLib
         }
         protected override float EvaluateState(GameState gameState)
         {
-            var inputData = gameState.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray();
+            var inputData = gameState.GetBoardFloatArray();
             var inputs = new List<NamedOnnxValue>()
                 {
                     NamedOnnxValue.CreateFromTensor(Consts.NNInputName, new DenseTensor<float>(inputData, Consts.NNInputShape))
@@ -36,7 +36,7 @@ namespace OnnxEstimatorLib
         {
             var inputShape = (int[])Consts.NNInputShape.Clone();
             inputShape[0] = gameStates.Count();
-            var inputData = gameStates.SelectMany(x => x.GetBoardStateArray()).Select(x => x ? 1f : 0f).ToArray();
+            var inputData = gameStates.SelectMany(x => x.GetBoardFloatArray()).ToArray();
             var inputs = new List<NamedOnnxValue>()
                 {
                     NamedOnnxValue.CreateFromTensor(Consts.NNInputName, new DenseTensor<float>(inputData, inputShape))

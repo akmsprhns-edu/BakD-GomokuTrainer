@@ -1,6 +1,7 @@
 ﻿using GomokuLib.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GomokuLib
 {
@@ -79,9 +80,14 @@ namespace GomokuLib
             return Board.OccupiedBy(row, col);
         }
 
-        public bool[] GetBoardStateArray()
+        public byte[] GetBoardByteArray()
         {
-            return Board.GetBoardStateArray();
+            return Board.GetBoardStateArray().Select(x => Convert.ToByte(x)).ToArray();
+        }
+
+        public float[] GetBoardFloatArray()
+        {
+            return Board.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray();
         }
 
         public IEnumerable<(int row, int colmun)> GetUnoccupiedPositions()

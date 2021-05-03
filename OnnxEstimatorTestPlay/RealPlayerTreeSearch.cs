@@ -26,7 +26,7 @@ namespace OnnxEstimatorLib
             throw new NotImplementedException();
         }
 
-        public override PlayerMove FindBestMove(GameState gameState, bool batch = true, int depth = 1)
+        public override PlayerMove FindBestMove(GameState gameState, bool batch = true)
         {
             Console.Write("Enter move: ");
             string userInput = Console.ReadLine();

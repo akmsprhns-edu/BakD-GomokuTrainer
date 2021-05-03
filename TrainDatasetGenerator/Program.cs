@@ -6,6 +6,7 @@ using OnnxEstimatorLib.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,9 +18,12 @@ namespace TrainDatasetGenerator
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static int ThreadCount = 16;
-        static int Main(string[] args)
+        private static int ThreadCount = 10;
+        private static int MinEvalCount = 500;
+        private static int MCTSIterationCount = 15000;
+        static async Task<int> Main(string[] args)
         {
+            var TerminateProgram = false;
             try
             {
                 if (args.Length == 0)
@@ -44,10 +48,16 @@ namespace TrainDatasetGenerator
                     {
                         try
                         {
-                            while (true)
+                            while (!TerminateProgram)
                             {
-                                RunGameSession();
+                                foreach (var position in RunGameSession())
+                                {
+                                    positions.Enqueue(position);
+                                    if (TerminateProgram)
+                                        break;
+                                }
                             }
+                            Logger.Info("Finishing thread");
                         }
                         catch (Exception e)
                         {
@@ -62,17 +72,43 @@ namespace TrainDatasetGenerator
                     thread.Start();
                 }
 
-                while (true)
+                //write positions to csv
+                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv"));
+                var totalLines = 0;
+                using (var writer = new StreamWriter(outputFilePath))
                 {
-                    Task.Delay(TimeSpan.FromSeconds(1));
-                    if (threadFailed)
+                    while (!TerminateProgram)
                     {
-                        throw new Exception("Error in thread occured");
+                        await Task.Delay(TimeSpan.FromSeconds(0.1));
+                        if (threadFailed)
+                        {
+                            throw new Exception("Error in thread occured");
+                        }
+                        while (positions.TryDequeue(out var position))
+                        {
+                            await writer.WriteLineAsync(position.ToCsvString());
+                            Logger.Info(++totalLines);
+                        }
+                        await writer.FlushAsync();
+
+                        while (Console.KeyAvailable)
+                        {
+                            if (Console.ReadKey(false).Key == ConsoleKey.X) {
+                                TerminateProgram = true;
+                            } else
+                            {
+                                Console.WriteLine("Press X to quit");
+                            }
+                        }
                     }
-
-
+                    Logger.Info("Finishing writing to file");
                 }
-                
+
+                foreach (var thread in threads)
+                {
+                    thread.Join();
+                }
+
                 return 0;
             }
             catch (Exception e)
@@ -82,6 +118,43 @@ namespace TrainDatasetGenerator
             }
         }
 
+        public static Player CreatePlayer()
+        {
+            var treeSearch = new MonteCarloTreeSearch(iterations: MCTSIterationCount, enableLogging: false);
+            return new Player("", treeSearch);
+        }
+
+        public static IEnumerable<Position> RunGameSession()
+        {
+            var player = CreatePlayer();
+            var gameState = GameState.NewGame();
+
+            while (true)
+            {
+
+                var move = player.TreeSearch.FindBestMove(gameState);
+                foreach(var state in player.TreeSearch.CurrentTreeNode.Children.Where(x => x.Value.Evals.Count > MinEvalCount))
+                {
+                    yield return new Position()
+                    {
+                        Board = state.Value.GameState.GetBoardByteArray(),
+                        PlayerTurn = state.Value.GameState.PlayerTurn,
+                        EvalCount = state.Value.Evals.Count,
+                        Eval = MonteCarloTreeSearch.EVAL(state.Value)
+                    };
+                }
+                gameState = gameState.MakeMove(move.Row, move.Column);
+                player.TreeSearch.MoveCurrentTreeNode(move);
+                //Logger.Info(gameState.DrawBoard());
+                var gameResult = gameState.IsGameOver();
+                if (gameResult.HasValue)
+                {
+                    break;
+                }
+            }
+            Logger.Info("Game finished");
+            Logger.Info("Final game state:\n" + gameState.DrawBoard());
+        }
         public static void ConfigureLogger(string logDir)
         {
             var config = new NLog.Config.LoggingConfiguration();
@@ -98,37 +171,6 @@ namespace TrainDatasetGenerator
 
             // Apply config           
             NLog.LogManager.Configuration = config;
-        }
-
-        public static Player CreatePlayer()
-        {
-
-            var treeSearch = new MonteCarloTreeSearch(enableLogging: false);
-            return new Player("e", treeSearch);
-        }
-
-        public static IEnumerable<Position> RunGameSession()
-        {
-            var player = CreatePlayer();
-            var gameState = GameState.NewGame();
-
-            while (true)
-            {
-
-                var move = player.TreeSearch.FindBestMove(gameState);
-                //foreach(var state in player.TreeSearch.)
-                gameState = gameState.MakeMove(move.Row, move.Column);
-                player.TreeSearch.MoveCurrentTreeNode(move);
-                Logger.Info(gameState.DrawBoard());
-                var gameResult = gameState.IsGameOver();
-                if (gameResult.HasValue)
-                {
-                    break;
-                }
-            }
-            throw new NotImplementedException();
-            //Logger.Info("Game finished");
-            //Logger.Info("Final game state:\n" + gameState.DrawBoard());
         }
     }
 }
