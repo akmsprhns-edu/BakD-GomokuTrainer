@@ -18,9 +18,9 @@ namespace TrainDatasetGenerator
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static int ThreadCount = 10;
-        private static int MinEvalCount = 500;
-        private static int MCTSIterationCount = 15000;
+        private static int ThreadCount = 9;
+        private static int MinEvalCount = 1000;
+        private static int MCTSIterationCount = 30000;
         static async Task<int> Main(string[] args)
         {
             var TerminateProgram = false;
@@ -73,7 +73,7 @@ namespace TrainDatasetGenerator
                 }
 
                 //write positions to csv
-                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.csv"));
+                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"I{MCTSIterationCount}_MEC{MinEvalCount}_{DateTime.Now:MM-dd_HH-mm-ss}.csv"));
                 var totalLines = 0;
                 using (var writer = new StreamWriter(outputFilePath))
                 {
