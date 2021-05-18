@@ -55,7 +55,7 @@ namespace TreeSearchLib
 
         public Dictionary<PlayerMove,GameTreeNode> ExpandNode(GameTreeNode gameTreeNode, bool generateStates, int depth = 1, bool onlyPriorityMoves = true)
         {
-            if (depth < 1)
+            if (depth < 1 || gameTreeNode.GameState.IsGameOver() != null)
             {
                 return null;
             }
@@ -66,18 +66,21 @@ namespace TreeSearchLib
                     Moves = new HashSet<PlayerMove>(gameTreeNode.Moves)
                 };
                 node.Moves.Add(m);
-                if (AllNodes.TryGetValue(node, out var existingNode))
-                {
-                    return (move: m, node: existingNode);
-                }
-                else
-                {
+                //if (AllNodes.TryGetValue(node, out var existingNode))
+                //{
+ 
+                //        Console.WriteLine($"\nExisting node found");
+
+                //    return (move: m, node: existingNode);
+                //}
+                //else
+                //{
                     node.GameState = generateStates ? gameTreeNode.GameState.MakeMove(m) : null;
                     if (depth > 0)
                         node.Children = ExpandNode(node, generateStates, depth - 1);
-                    AllNodes.Add(node);
+                    //AllNodes.Add(node);
                     return (move: m, node: node);
-                }
+                //}
                 
             }).ToDictionary(x => x.move, x => x.node);
         }

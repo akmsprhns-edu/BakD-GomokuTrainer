@@ -11,8 +11,9 @@ namespace GomokuWebUI
 {
     public enum AIType
     {
-        PureMonteCarlo,
-        MCTSAndNeuralNet
+        PureMCTS,
+        NeuralMCTS,
+        NeuralMinimax
     }
     public class PvEGameSession
     {
@@ -28,13 +29,17 @@ namespace GomokuWebUI
             GameState = GameState.NewGame();
             Moves = new Dictionary<string, int>();
             PColor = PlayerColor.First;
-            if(aiType == AIType.PureMonteCarlo)
+            if(aiType == AIType.PureMCTS)
             {
                 AITreeSearch = new MonteCarloTreeSearch(enableLogging: true);
             }
-            else if (aiType == AIType.MCTSAndNeuralNet)
+            else if (aiType == AIType.NeuralMCTS)
             {
                 AITreeSearch = new OnnxEstimatorTreeSearch(new InferenceSession(@"C:\Projects\OnnxEstimator\ModelsWebUI\model.onnx"));
+            }
+            else if (aiType == AIType.NeuralMinimax)
+            {
+                AITreeSearch = new OnnxEstimatorMinimax(new InferenceSession(@"C:\Projects\OnnxEstimator\ModelsWebUI\model.onnx"), 3, enabaleLogging: true);
             }
             else
             {

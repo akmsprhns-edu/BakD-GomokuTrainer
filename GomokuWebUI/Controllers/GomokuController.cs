@@ -26,7 +26,7 @@ namespace GomokuWebUI.Controllers
         [HttpPost("[action]")]
         public IActionResult NewGame()
         {
-            var newGameSession = new PvEGameSession(Guid.NewGuid().ToString(), AIType.MCTSAndNeuralNet);
+            var newGameSession = new PvEGameSession(Guid.NewGuid().ToString(), AIType.NeuralMCTS);
             _gameSessions[newGameSession.Guid] = newGameSession;
 
             return Ok(GetModelJson(newGameSession));

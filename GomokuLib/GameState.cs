@@ -87,7 +87,28 @@ namespace GomokuLib
 
         public float[] GetBoardFloatArray()
         {
-            return Board.GetBoardStateArray().Select(x => x ? 1f : 0f).ToArray();
+            var result = new List<float>();
+            var boardArr = Board.GetBoardStateArray();
+            for (int i = 0; i < boardArr.Length; i += 2)
+            {
+                if(boardArr[i] == false && boardArr[i+1] == false)
+                {
+                    result.Add(0);
+                } 
+                else if (boardArr[i] == true && boardArr[i + 1] == false)
+                {
+                    result.Add(1);
+                } 
+                else if (boardArr[i] == false && boardArr[i + 1] == true)
+                {
+                    result.Add(-1);
+                } 
+                else
+                {
+                    throw new Exception("Board array malformed");
+                }
+            }
+            return result.ToArray();
         }
 
         public IEnumerable<(int row, int colmun)> GetUnoccupiedPositions()

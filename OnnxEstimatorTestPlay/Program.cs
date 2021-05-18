@@ -128,7 +128,7 @@ namespace OnnxEstimatorTestPlay
                 Console.WriteLine("Suggested moves:");
                 playerFirst.TreeSearch.PrintCurrentStateMoveInfo();
                 playerSecond.TreeSearch.PrintCurrentStateMoveInfo();
-                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState, depth: 2);
+                var playerMove = currentPlayer.TreeSearch.FindBestMove(gameState);
                 gameState = gameState.MakeMove(playerMove.Row, playerMove.Column);
                 playerFirst.TreeSearch.MoveCurrentTreeNode(playerMove);
                 playerSecond.TreeSearch.MoveCurrentTreeNode(playerMove);

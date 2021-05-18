@@ -23,7 +23,7 @@ namespace ComparisonSimulation
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static int ThreadCount = 9;
-        private static int MCTSIterationCount = 1000;
+        private static int MCTSIterationCount = 1500;
         private static string OnnxModelPath = "";
         private static bool _LOG = false;
         static async Task<int> Main(string[] args)
@@ -145,7 +145,7 @@ namespace ComparisonSimulation
 
                 var inferenceSession = new InferenceSession(modelPath);
 
-                var treeSearch = new OnnxEstimatorTreeSearch(inferenceSession);
+                var treeSearch = new OnnxEstimatorTreeSearch(inferenceSession, iterations: MCTSIterationCount, enableLogging: false);
                 return new Player(playerName, treeSearch);
             } else
             {

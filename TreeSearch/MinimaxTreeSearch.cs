@@ -10,9 +10,42 @@ namespace TreeSearchLib
     public class MinimaxTreeSearch : TreeSearch
     {
         protected readonly int _depth;
-        public MinimaxTreeSearch(int depth)
+        protected readonly bool _enableLogging;
+        public MinimaxTreeSearch(int depth, bool enableLogging = false)
         {
             _depth = depth;
+            _enableLogging = enableLogging;
+        }
+
+        public override void MoveCurrentTreeNode(PlayerMove move)
+        {
+            //if (CurrentTreeNode != null)
+            //{
+            //    if (CurrentTreeNode.Children.TryGetValue(move, out var newNode) && newNode.GameState != null)
+            //    {
+            //        if (_enableLogging)
+            //        {
+            //            Console.WriteLine("Current node changed." +
+            //                $"Previous node eval.: {CurrentTreeNode.Evaluation}; " +
+            //                $"New node eval.: {newNode.Evaluation}.");
+            //        }
+            //        CurrentTreeNode = newNode;
+            //        if (_enableLogging)
+            //        {
+            //            Console.WriteLine(CurrentTreeNode.GameState.DrawBoard());
+            //            Console.WriteLine($"NeuralMinimax evaluated moves for {CurrentTreeNode.GameState.PlayerTurn} : \n" + PrintMoveInfo(CurrentTreeNode.Children));
+            //        }
+
+            //        AllNodes.RemoveWhere(x => x.Moves.Count < CurrentTreeNode.Moves.Count);
+            //    }
+            //    else
+            //    {
+            //        if (_enableLogging)
+            //            Console.WriteLine("Unable to coninue current tree");
+
+            //        CurrentTreeNode = null;
+            //    }
+            //}
         }
 
         public void EvaluateNode(GameTreeNode node, bool Maximize)
@@ -45,6 +78,7 @@ namespace TreeSearchLib
             foreach (var item in items)
             {
                 item.Node.Evaluation = item.Eval;
+                Console.WriteLine($"\nboard evaluation {item.Eval}:\n {item.Node.GameState.DrawBoard()}");
             }
             return gameTree;
         }
@@ -52,11 +86,20 @@ namespace TreeSearchLib
         public IEnumerable<SearchResult> GetEvaluatedMovesMinMax(GameState gameState, bool maximize, int depth = 1)
         {
             var tree = EvaluateTree(BuildTree(gameState, true, depth));
+            CurrentTreeNode = tree.Root;
+
             EvaluateNode(tree.Root, maximize);
-            return tree.Root.Children.Values.Select(x => new SearchResult()
+
+            if (_enableLogging)
             {
-                Evaluation = x.Evaluation.Value,
-                GameState = x.GameState
+                Console.WriteLine("NeuralMinimax evaluated moves: \n" + PrintMoveInfo(CurrentTreeNode.Children));
+                Console.WriteLine("Position: \n" + gameState.DrawBoard());
+            }
+            return tree.Root.Children.Select(x => new SearchResult()
+            {
+                Evaluation = x.Value.Evaluation.Value,
+                GameState = x.Value.GameState,
+                Move = x.Key
             });
         }
 
@@ -93,6 +136,49 @@ namespace TreeSearchLib
                     return minMoves.Skip(Random.Next(minMoves.Count())).First().Move;
                 }
             }
+        }
+
+        public override string PrintCurrentStateMoveInfo()
+        {
+            if (CurrentTreeNode != null)
+            {
+                return PrintMoveInfo(CurrentTreeNode.Children);
+            }
+            return "";
+        }
+        public static string PrintMoveInfo(Dictionary<PlayerMove, GameTreeNode> dict)
+        {
+            if (dict == null || !dict.Any())
+            {
+                return "No childrens...";
+            }
+            var stringBuilder = new StringBuilder();
+            var move = "";
+            var avgEval = "";
+            var i = 0;
+            foreach (var item in dict.ToList().OrderBy(x => x.Key.Column).ThenByDescending(x => x.Key.Row))
+            {
+                move += $"{item.Key,-7}|";
+                avgEval += $"{item.Value.Evaluation,-7:.0000}|";
+                if (i > 15)
+                {
+                    stringBuilder.AppendLine(move);
+                    stringBuilder.AppendLine(avgEval);
+                    move = "";
+                    avgEval = "";
+                    i = 0;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(move))
+            {
+                stringBuilder.AppendLine(move);
+                stringBuilder.AppendLine(avgEval);
+            }
+            return stringBuilder.ToString();
         }
 
         //public PlayerMove FindBestMoveMinMax(GameState gameState, int depth)
