@@ -12,7 +12,7 @@ namespace OnnxEstimatorLib
     {
         private readonly InferenceSession _inferenceSession;
         public OnnxEstimatorTreeSearch(InferenceSession inferenceSession)
-            : base(iterations: 15000, playoutDepth: 5, enableLogging: true)
+            : base(iterations: 15000, playoutDepth: 2, enableLogging: true)
         {
             _inferenceSession = inferenceSession;
         }

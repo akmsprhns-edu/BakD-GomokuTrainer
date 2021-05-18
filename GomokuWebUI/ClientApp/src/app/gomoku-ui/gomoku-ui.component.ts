@@ -46,28 +46,30 @@ export class GomokuUiComponent implements OnInit {
   public makeMove(row: number, col: number) :void {
     if(this.moveInProgress == true || this.gameSession.gameResult != null) 
       return;
-    this.moveInProgress = true;
+
     if(this.gameSession.board[row][col] != StoneColor.None){
       return;
-    } else {
-      this.gameSession.board[row][col] = StoneColor.First;
-      let request = <MoveRequest>{
-        gameSessionGuid: this.gameSession.guid,
-        row: row,
-        column: col
-      };
-      this._httpClient.post<GameSession>(environment.baseUrl + '/Api/Gomoku/MakeMove', request).subscribe(
-        result => {
-        this.gameSession = result;
-        this.moveInProgress = false;
-        }, 
-        error => { 
-          console.error(error);
-          this.gameSession.board[row][col] = StoneColor.None;
-          this.moveInProgress = false;
-        }
-      );
     }
+    
+    this.moveInProgress = true;
+    this.gameSession.board[row][col] = StoneColor.First;
+    let request = <MoveRequest>{
+      gameSessionGuid: this.gameSession.guid,
+      row: row,
+      column: col
+    };
+    this._httpClient.post<GameSession>(environment.baseUrl + '/Api/Gomoku/MakeMove', request).subscribe(
+      result => {
+      this.gameSession = result;
+      this.moveInProgress = false;
+      }, 
+      error => { 
+        console.error(error);
+        this.gameSession.board[row][col] = StoneColor.None;
+        this.moveInProgress = false;
+      }
+    );
+    
   }
 
   public selectPosition(eventTarget: HTMLElement): void{
