@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ComparisonSimulation": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\ComparisonSimulation\\model.onnx C:\\Projects\\ComparisonSimulation\\DevOutput"
+    }
+  }
+}

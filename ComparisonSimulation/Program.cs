@@ -1,6 +1,8 @@
 ﻿using GomokuLib;
+using Microsoft.ML.OnnxRuntime;
 using NLog;
 using OnnxEstimatorLib;
+using OnnxEstimatorLib.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,33 +12,46 @@ using System.Threading;
 using System.Threading.Tasks;
 using TreeSearchLib;
 
-namespace TrainDatasetGenerator
+namespace ComparisonSimulation
 {
+    public enum AIType
+    {
+        PureMCTS,
+        NeuralMCTS
+    }
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static int ThreadCount = 9;
-        private static int MinEvalCount = 1000;
-        private static int MCTSIterationCount = 30000;
+        private static int MCTSIterationCount = 1000;
+        private static string OnnxModelPath = "";
+        private static bool _LOG = false;
         static async Task<int> Main(string[] args)
         {
             var TerminateProgram = false;
             try
             {
-                if (args.Length == 0)
+                if (args.Length < 2)
                 {
-                    Console.WriteLine("Output folder must be specified");
+                    Console.WriteLine("Two parameters required, onnx model path and output dir");
                     return -1;
                 }
 
-                string outputDir = args[0];
-                outputDir = Path.GetFullPath(outputDir);
-                ConfigureLogger(Path.Combine(outputDir,"logs"));
+                OnnxModelPath = Path.GetFullPath(args[0]);
+                string outputDir = Path.GetFullPath(args[1]);
+                ConfigureLogger(Path.Combine(outputDir, "logs"));
+                Logger.Info($"Onnx model path {OnnxModelPath}");
                 Logger.Info($"Output directory {outputDir}");
+
+                if (!File.Exists(OnnxModelPath))
+                {
+                    throw new FileNotFoundException("file not found", OnnxModelPath);
+                }
+
                 var random = new Random();
 
                 var threads = new List<Thread>();
-                var positions = new ConcurrentQueue<Position>();
+                var results = new ConcurrentQueue<Result>();
                 var threadFailed = false;
 
                 for (int i = 0; i < ThreadCount; ++i)
@@ -47,12 +62,11 @@ namespace TrainDatasetGenerator
                         {
                             while (!TerminateProgram)
                             {
-                                foreach (var position in RunGameSession())
-                                {
-                                    positions.Enqueue(position);
-                                    if (TerminateProgram)
-                                        break;
-                                }
+
+                                results.Enqueue(RunGameSession(AIType.NeuralMCTS, AIType.PureMCTS));
+                                if (TerminateProgram)
+                                    break;
+                                results.Enqueue(RunGameSession(AIType.PureMCTS, AIType.NeuralMCTS));
                             }
                             Logger.Info("Finishing thread");
                         }
@@ -70,7 +84,7 @@ namespace TrainDatasetGenerator
                 }
 
                 //write positions to csv
-                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"I{MCTSIterationCount}_MEC{MinEvalCount}_{DateTime.Now:MM-dd_HH-mm-ss}.csv"));
+                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"SimResults_{DateTime.Now:MM-dd_HH-mm-ss}.csv"));
                 var totalLines = 0;
                 using (var writer = new StreamWriter(outputFilePath))
                 {
@@ -81,7 +95,7 @@ namespace TrainDatasetGenerator
                         {
                             throw new Exception("Error in thread occured");
                         }
-                        while (positions.TryDequeue(out var position))
+                        while (results.TryDequeue(out var position))
                         {
                             await writer.WriteLineAsync(position.ToCsvString());
                             Logger.Info(++totalLines);
@@ -90,9 +104,11 @@ namespace TrainDatasetGenerator
 
                         while (Console.KeyAvailable)
                         {
-                            if (Console.ReadKey(false).Key == ConsoleKey.X) {
+                            if (Console.ReadKey(false).Key == ConsoleKey.X)
+                            {
                                 TerminateProgram = true;
-                            } else
+                            }
+                            else
                             {
                                 Console.WriteLine("Press X to quit");
                             }
@@ -115,42 +131,47 @@ namespace TrainDatasetGenerator
             }
         }
 
-        public static Player CreatePlayer()
+        public static Player CreatePlayer(AIType aiType)
         {
-            var treeSearch = new MonteCarloTreeSearch(iterations: MCTSIterationCount, enableLogging: false);
-            return new Player("", treeSearch);
+            if (aiType == AIType.PureMCTS)
+            {
+                var treeSearch = new MonteCarloTreeSearch(iterations: MCTSIterationCount, enableLogging: false);
+                return new Player("PureMCTS", treeSearch);
+            }
+            else if (aiType == AIType.NeuralMCTS)
+            {
+                var modelPath = OnnxModelPath;
+                var playerName = "NeuralMCTS";
+
+                var inferenceSession = new InferenceSession(modelPath);
+
+                var treeSearch = new OnnxEstimatorTreeSearch(inferenceSession);
+                return new Player(playerName, treeSearch);
+            } else
+            {
+                throw new Exception("Unsupported player type");
+            }
         }
 
-        public static IEnumerable<Position> RunGameSession()
+        public static Result RunGameSession(AIType firstPlayerType, AIType secondPlayerType)
         {
-            var player = CreatePlayer();
+            var playerOne = CreatePlayer(firstPlayerType);
+            var playerTwo = CreatePlayer(secondPlayerType);
             var gameState = GameState.NewGame();
+            var gameSession = new GameSession(playerOne, playerTwo, gameState);
+            var start = DateTime.Now;
+            Logger.Info($"Starting game session ({firstPlayerType} vs {secondPlayerType})");
+            var gameResult = gameSession.Run(log: _LOG);
+            var duration = DateTime.Now - start;
+            Logger.Info($"Game session ({firstPlayerType} vs {secondPlayerType}) ended in {duration} s. Game result: {gameResult}.\n" + gameSession.GameState.DrawBoard());
 
-            while (true)
+            return new Result()
             {
-
-                var move = player.TreeSearch.FindBestMove(gameState);
-                foreach(var state in player.TreeSearch.CurrentTreeNode.Children.Where(x => x.Value.Evals.Count > MinEvalCount))
-                {
-                    yield return new Position()
-                    {
-                        Board = state.Value.GameState.GetBoardByteArray(),
-                        PlayerTurn = state.Value.GameState.PlayerTurn,
-                        EvalCount = state.Value.Evals.Count,
-                        Eval = MonteCarloTreeSearch.EVAL(state.Value)
-                    };
-                }
-                gameState = gameState.MakeMove(move.Row, move.Column);
-                player.TreeSearch.MoveCurrentTreeNode(move);
-                //Logger.Info(gameState.DrawBoard());
-                var gameResult = gameState.IsGameOver();
-                if (gameResult.HasValue)
-                {
-                    break;
-                }
-            }
-            Logger.Info("Game finished");
-            Logger.Info("Final game state:\n" + gameState.DrawBoard());
+                FirstPlayer = firstPlayerType,
+                SecondPlayer = secondPlayerType,
+                GameResult = gameResult
+            };
+            
         }
         public static void ConfigureLogger(string logDir)
         {

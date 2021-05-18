@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GomokuWebUI", "GomokuWebUI\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SelfPlayTestSimulation", "SelfPlayTestSimulation\SelfPlayTestSimulation.csproj", "{2FDCBB3F-F761-497C-9DE5-2AA776980D00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainDatasetGenerator", "TrainDatasetGenerator\TrainDatasetGenerator.csproj", "{22C5F29B-B879-41CE-B9FF-72036E9248E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrainDatasetGenerator", "TrainDatasetGenerator\TrainDatasetGenerator.csproj", "{22C5F29B-B879-41CE-B9FF-72036E9248E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComparisonSimulation", "ComparisonSimulation\ComparisonSimulation.csproj", "{FBE7E76C-B66C-4B5C-B535-B1B9C38D800E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,10 @@ Global
 		{22C5F29B-B879-41CE-B9FF-72036E9248E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22C5F29B-B879-41CE-B9FF-72036E9248E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22C5F29B-B879-41CE-B9FF-72036E9248E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBE7E76C-B66C-4B5C-B535-B1B9C38D800E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBE7E76C-B66C-4B5C-B535-B1B9C38D800E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBE7E76C-B66C-4B5C-B535-B1B9C38D800E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBE7E76C-B66C-4B5C-B535-B1B9C38D800E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
