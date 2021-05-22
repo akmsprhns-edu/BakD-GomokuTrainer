@@ -16,8 +16,8 @@ namespace TrainDatasetGenerator
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static int ThreadCount = 9;
-        private static int MinEvalCount = 1000;
-        private static int MCTSIterationCount = 30000;
+        private static int MCTSIterationCount = 5000;
+        private static Random Random = new Random();
         static async Task<int> Main(string[] args)
         {
             var TerminateProgram = false;
@@ -70,7 +70,7 @@ namespace TrainDatasetGenerator
                 }
 
                 //write positions to csv
-                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"I{MCTSIterationCount}_MEC{MinEvalCount}_{DateTime.Now:MM-dd_HH-mm-ss}.csv"));
+                var outputFilePath = Path.GetFullPath(Path.Combine(outputDir, $"I{MCTSIterationCount}_{DateTime.Now:MM-dd_HH-mm-ss}.csv"));
                 var totalLines = 0;
                 using (var writer = new StreamWriter(outputFilePath))
                 {
@@ -130,18 +130,33 @@ namespace TrainDatasetGenerator
             {
 
                 var move = player.TreeSearch.FindBestMove(gameState);
-                foreach(var state in player.TreeSearch.CurrentTreeNode.Children.Where(x => x.Value.Evals.Count > MinEvalCount))
+                var currentNode = player.TreeSearch.CurrentTreeNode;
+                //foreach (var state in currentNodeChildren.Where(x => x.Value.Evals.Count > MinEvalCount))
+                //{
+                //    yield return new Position()
+                //    {
+                //        Board = state.Value.GameState.GetBoardFloatArray(),
+                //        PlayerTurn = state.Value.GameState.PlayerTurn == PlayerColor.First ? 1 : -1,
+                //        EvalCount = state.Value.Evals.Count,
+                //        Eval = state.Value.GameState.PlayerTurn == PlayerColor.First ? -MonteCarloTreeSearch.EVAL(state.Value) : MonteCarloTreeSearch.EVAL(state.Value)
+                //    };
+                //}
+                yield return new Position()
                 {
-                    yield return new Position()
-                    {
-                        Board = state.Value.GameState.GetBoardByteArray(),
-                        PlayerTurn = state.Value.GameState.PlayerTurn,
-                        EvalCount = state.Value.Evals.Count,
-                        Eval = MonteCarloTreeSearch.EVAL(state.Value)
-                    };
-                }
-                gameState = gameState.MakeMove(move.Row, move.Column);
+                    Board = currentNode.GameState.GetBoardFloatArray(),
+                    PlayerTurn = currentNode.GameState.PlayerTurn == PlayerColor.First ? 1 : -1,
+                    EvalCount = currentNode.Evals.Count,
+                    Eval = currentNode.GameState.PlayerTurn == PlayerColor.First ? -MonteCarloTreeSearch.EVAL(currentNode) : MonteCarloTreeSearch.EVAL(currentNode)
+                };
+
+                move = currentNode.Children.Keys.ElementAt(
+                    Random.Next(currentNode.Children.Count)
+                    ); //select random move
+
+                //gameState = gameState.MakeMove(move.Row, move.Column);
+
                 player.TreeSearch.MoveCurrentTreeNode(move);
+                gameState = player.TreeSearch.CurrentTreeNode.GameState;
                 //Logger.Info(gameState.DrawBoard());
                 var gameResult = gameState.IsGameOver();
                 if (gameResult.HasValue)

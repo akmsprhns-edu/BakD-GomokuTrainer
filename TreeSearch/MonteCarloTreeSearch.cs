@@ -49,23 +49,29 @@ namespace TreeSearchLib
 
         private GameState MCTSPlayout(GameState sourceGameState, int maxDepth)
         {
+            //Kopējam stāvokli, lai to varētu modificēt un nesabojāt esošu spēles koku.
             var gameState = sourceGameState.Copy();
+
+            // Cikliski simulējam gājienus, kamēr nav sasniegts maksimālais dziļums,
+            // vai spēle nav beigusies.
             for (var depth = 0; depth < maxDepth; ++depth)
             {
                 var gameOver = gameState.IsGameOver();
                 if (gameOver != null)
                 {
-                    return gameState;
+                    //Spēle ir beigusies, beidzam simulēšanas posmu.
+                    break;
                 }
 
-                //make random move
+                //Veicam nejaušu gājienu.
                 var moves = GetMoves(gameState).ToList();
                 var randomMove = moves.ElementAt(Random.Next(moves.Count()));
                 gameState.MakeMoveInPlace(randomMove);
             }
+            //Atgriežam sasniegto stāvokli
             return gameState;
-
         }
+
         private static int turn = 0;
         private float MCTSRun(GameTreeNode node)
         {
@@ -78,10 +84,13 @@ namespace TreeSearchLib
             var isGameOverResult = node.GameState.IsGameOver();
             if (isGameOverResult != null)
             {
+                //Spēle beigusies (uzvarēja viens no spēlētajiem)
                 simulationResult = isGameOverResult;
             }
-            else if (node.Evals.Count == 0) // new node found
+            else if (node.Evals.Count == 0)
             {
+                //Atrasta iepriekš neizmeklēta virsotne
+                //(3. Posms: Simulēšana)
                 playoutGameState = MCTSPlayout(node.GameState, _playoutDepth);
                 simulationResult = playoutGameState.IsGameOver();
             } 
@@ -89,15 +98,19 @@ namespace TreeSearchLib
             {
                 if (node.Children is null)
                 {
+                    //Virsotnēs pēcteči nav inicializēti, inicializējam tos
                     node.Children = ExpandNode(node, false);
                 }
                 if (!node.Children.Any())
                 {
-                    //no more moves, tie
+                    //Pēc inicializācijas pēcteču skaits ir 0,
+                    //kas nozīme, ka no šīs virsotnēs vairs nav gājienu (neizšķirts)
                     simulationResult = GameResult.Tie;
                 }
                 else
                 {
+                    //Turpinām pārmeklēšanu, jāizvēlas virsotne ar lielāku UCB
+                    //( 1. Posms: Izvēle)
                     double bestUCB = double.MinValue;
                     KeyValuePair<PlayerMove,GameTreeNode>? bestChild = null;
                     foreach (var child in node.Children)
@@ -109,14 +122,18 @@ namespace TreeSearchLib
                             bestChild = child;
                         }
                         if (bestUCB == double.MaxValue)
-                            break; //Stop if maximal value found
+                            break;
                     }
+                    // Virsotnēs pozīcija nav inicializēta, inicializējam to;
+                    // (2. Posms: Paplašināšana)
                     if (bestChild.Value.Value.GameState is null)
                     {
                         bestChild.Value.Value.GameState = node.GameState.MakeMove(bestChild.Value.Key);
                     }
 
-                    evaluation = MCTSRun(bestChild.Value.Value); // Evaluation backpropagation
+                    // Rekursīvi izsaucam šo pašu metodi.
+                    // (4. Posms: Atpakaļizplatīšana)
+                    evaluation = MCTSRun(bestChild.Value.Value); 
                 }
 
             }
